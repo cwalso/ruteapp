@@ -24,29 +24,33 @@ npm
 
 Det er foreløpig ikke implementert produksjonsklar routingfunksjonalitet.
 
-MapLibre GL JS er installert og integrert. Applikasjonen viser et interaktivt kart med Kartverkets toporaster som visuelt bakgrunnskart.
+MapLibre GL JS er installert og integrert. Applikasjonen har to valgbare kartprofiler: den eksperimentelle standardprofilen RuteApp Sommer og Kartverket Turkart. Turrutebase – Fotrute vises som tematisk lag over begge profilene.
 
 Nerskogen brukes som standard utviklings- og testutsnitt med sentrum omtrent ved lengdegrad 9.6012 og breddegrad 62.7802.
 
 Routing, OSM-integrasjon, rutegraf og rutemotor er foreløpig ikke implementert.
 
+Interaktiv rutepunktplanlegging er implementert som et eget featurelag. Brukeren kan legge til en ordnet liste med punkt A, vilkårlig antall mellompunkter og punkt B, dra punktene, fjerne enkeltpunkter med høyreklikk og tømme listen. En foreløpig planleggingslinje og geografisk storcirkelavstand oppdateres umiddelbart når punktgeometrien endres. Linjen og avstanden er direkte geometri mellom punktene, ikke faktisk routing på sti- og veinett. Høydeprofil er heller ikke implementert.
+
 ## Besluttet kart- og datagrunnlag
 
-MapLibre GL JS brukes som presentasjonsmotor, og Kartverkets toporaster brukes som visuelt bakgrunnskart. OpenStreetMap-rådata er valgt som planlagt primært grunnlag for det routbare sti- og veinettet; renderte kartfliser skal ikke brukes som routingdata.
+MapLibre GL JS brukes som presentasjonsmotor. Kartverkets toporaster brukes i profilen Kartverket Turkart, mens OpenFreeMap Positron testes i RuteApp Sommer. OpenStreetMap-rådata er valgt som planlagt primært grunnlag for det routbare sti- og veinettet; renderte kartfliser og vektortiles brukt til visning skal ikke brukes som routingdata.
 
 Kartverkets høyde-, terreng- og friluftsdata kan senere berike routinggrunnlaget og vurderingen av virtuelle terrengforbindelser. Kartintegrasjonen er implementert under `src/map/`, mens OSM-import, rutegraf og rutemotor fortsatt ikke er implementert. Skillet mellom visuelt kartgrunnlag og routinggrunnlag er dokumentert i [ADR-001](decisions/ADR-001-kart-og-geografisk-datagrunnlag.md).
 
-Kartarkitekturen er lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at `MapView` eller routingarkitekturen må bygges om. Kartverket toporaster er eneste aktive lag nå og er ikke en permanent binding til dette kartproduktet.
+Kartarkitekturen er lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens kartprofiler, bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at `MapView` eller routingarkitekturen må bygges om. Kartverket toporaster beholdes i profilen Kartverket Turkart, og Fotrute er aktivt temalag over begge profiler.
 
-Arkitekturen skal senere kunne støtte sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Med unntak av Fotrute som første kandidat er konkrete datakilder for disse lagene ikke besluttet, og tekniske endepunkter er fortsatt åpne. Et synlig tematisk kartlag og dataene rutemotoren bruker er separate arkitekturbegreper.
+RuteApp Sommer er en kartografisk spike som bruker OpenFreeMap Positron som dempet vektorbasert bakgrunn. En subtil 2D-hillshade fra Mapterhorn legges under ferdselsnett og etiketter, mens `class=path` og `class=track` fra OpenMapTiles-laget `transportation` fremheves separat over bakgrunnen. Dette er kun visualisering av vektortiledata, ikke OSM-import eller routinggrunnlag. OpenFreeMap, Mapterhorn og den konkrete kartografien er ikke permanente valg.
+
+Arkitekturen skal senere kunne støtte flere sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse framtidige lagene er ikke besluttet. Et synlig tematisk kartlag og dataene rutemotoren bruker er separate arkitekturbegreper.
 
 Kartinnholdet deles konseptuelt i tre kategorier:
 
 1. Bakgrunnslag gir visuell kontekst. Kartverket toporaster er første implementerte bakgrunnslag og er ikke routingdata.
-2. Tematiske lag viser eksterne fagdata oppå bakgrunnskartet. Første konkrete kandidat er Kartverkets Turrutebase – Fotrute, som beskriver registrerte fotturruter og ikke alle ordinære stier. Fotrute kan senere vurderes som berikelse eller kvalitetssignal for routing, men denne rollen er separat fra visualisering og er ikke besluttet.
+2. Tematiske lag viser eksterne fagdata oppå bakgrunnskartet. Første implementerte temalag er Kartverkets Turrutebase – Fotrute, som beskriver registrerte fotturruter og ikke alle ordinære stier. Fotrute kan senere vurderes som berikelse eller kvalitetssignal for routing, men denne rollen er separat fra visualisering og er ikke besluttet.
 3. Applikasjonsgenererte kartobjekter, som punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater, kommer fra applikasjonens tilstand og beregninger. De trenger ikke ligge i det statiske kartlagregisteret for eksterne kilder.
 
-Fotrute er ikke implementert. Konkret endepunkt og innlastingsmåte i MapLibre er åpne spørsmål for en senere oppgave.
+Fotrute hentes fra Kartverkets Turrutebase WMS med WMS 1.1.1 og vises som et transparent rasterlag i Web Mercator over begge kartprofilene. Dette er kun kartvisualisering; routing og OSM-integrasjon er fortsatt ikke implementert.
 
 ## Repositorystruktur
 
@@ -66,6 +70,8 @@ Funksjonsorientert applikasjonskode.
 
 Denne mappen brukes når en funksjon består av flere relaterte UI-elementer, tilstand og oppførsel.
 
+`features/route-planning/` eier den ordnede rutepunktlisten, endringsoperasjonene, rolleutledningen for A/B/mellompunkter og den foreløpige avstandsberegningen. State eies av React-featurelaget og ikke av MapLibre-instansen.
+
 ### `/src/map`
 
 Kartspesifikk funksjonalitet.
@@ -82,7 +88,7 @@ visualisering av geografiske objekter
 
 Ruteberegningsalgoritmer skal ikke ligge her.
 
-`MapView.tsx` eier MapLibre-kartets livssyklus og presentasjon. `mapLayers.ts` beskriver aktive eksterne bakgrunnslag og tematiske lag og kildene deres; foreløpig inneholder registeret bare Kartverket toporaster. Applikasjonsgenererte kartobjekter kan senere håndteres dynamisk uten å inngå i dette statiske registeret. `mapConfig.ts` bygger MapLibre-stilen fra lagkonfigurasjonen og inneholder standardutsnittet for Nerskogen.
+`MapView.tsx` eier MapLibre-kartets livssyklus, en midlertidig profilvelger og kartpresentasjonen av rutepunkter. Komponenten mottar punktlisten som props og rapporterer kartklikk, dragging og høyreklikkfjerning tilbake til featurelaget. `routePlanningLayer.ts` synkroniserer den foreløpige GeoJSON-linjen som et app-generert lag og reetablerer den etter stilbytte. `mapProfiles.ts` beskriver RuteApp Sommer og Kartverket Turkart og komponerer hver base-style med profilens tilleggslag. `mapLayers.ts` beskriver de konkrete eksterne kartkildene og lagene. `mapConfig.ts` inneholder standardutsnittet for Nerskogen.
 
 ### `/src/routing`
 
@@ -108,6 +114,8 @@ Kommunikasjon med eksterne datakilder, API-er og senere backend-tjenester.
 ### `/src/types`
 
 Felles TypeScript-typer og interfaces for domeneobjekter og datastrukturer.
+
+`routePoint.ts` definerer den minimale rutepunktmodellen med stabil id, longitude og latitude. Modellen inneholder foreløpig ingen routing-, høyde- eller terrengegenskaper.
 
 ### `/src/utils`
 

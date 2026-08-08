@@ -125,6 +125,14 @@ Brukeren:
 8. ser ruten i kartet
 9. ser grunnleggende informasjon om ruten
 
+## 4.3 Implementert rutepunktplanlegging
+
+Før rutemotoren etableres, støtter applikasjonen interaktiv planlegging med en ordnet liste av geografiske rutepunkter. Første punkt er A, siste punkt er B når minst to punkter finnes, og punktene mellom dem er nummererte mellompunkter. Nye punkt legges sist, slik at tidligere B blir et mellompunkt når et nytt mål legges til.
+
+Punkter kan dras, fjernes enkeltvis med høyreklikk og tømmes samlet. Roller og nummerering utledes på nytt etter hver endring. React-featurelaget eier punktlisten; MapLibre viser markører og rapporterer interaksjoner tilbake.
+
+Når minst to punkt finnes, viser kartet en app-generert GeoJSON-linje gjennom punktene. Samlet foreløpig avstand beregnes on the fly som summen av geografisk storcirkelavstand mellom påfølgende punkt. Linjen og avstanden representerer direkte planleggingsgeometri, ikke en beregnet fotturrute på sti- og veinett. Faktisk routing og høydeprofil implementeres i senere steg.
+
 ---
 
 # 5. Funksjonelt omfang for MVP
@@ -139,6 +147,9 @@ MVP skal støtte:
 * touch-operasjoner på mobil
 * valg av startpunkt
 * valg av målpunkt
+* vilkårlig antall mellompunkter
+* flytting og fjerning av rutepunkter
+* foreløpig planleggingslinje og geografisk avstand
 
 ### Ruting
 
@@ -209,7 +220,7 @@ Dette er separate ansvarsområder og skal ikke behandles som samme datagrunnlag.
 
 ## 7.1 Visuelt kartgrunnlag
 
-MapLibre GL JS er valgt som kart- og presentasjonsmotor. Kartverkets toporaster/turkart skal brukes som primært visuelt bakgrunnskart i første versjon.
+MapLibre GL JS er valgt som kart- og presentasjonsmotor. Kartverkets toporaster/turkart beholdes som etablert visuelt bakgrunnsalternativ, mens alternative profiler kan prøves uten å endre routingarkitekturen.
 
 Kartarkitekturen skal være lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at MapView eller routingarkitekturen må bygges om.
 
@@ -217,9 +228,15 @@ Kartverket-kartet er et presentasjonsgrunnlag og skal ikke behandles som routing
 
 MapLibre skal vise bakgrunnskart, geografiske objekter og beregnede ruter, men skal ikke eie rutelogikk.
 
-Kartverket toporaster er det første og foreløpig eneste implementerte bakgrunnskartet, men løsningen er ikke permanent bundet til dette kartproduktet. Nerskogen brukes som standard utviklings- og testutsnitt.
+Kartverket toporaster er det første implementerte bakgrunnskartet og beholdes som alternativ, men løsningen er ikke permanent bundet til dette kartproduktet. Nerskogen brukes som standard utviklings- og testutsnitt.
 
-Kartarkitekturen skal senere kunne kombinere bakgrunnskart med sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Med unntak av Fotrute som første kandidat er konkrete datakilder for disse lagene ikke besluttet, og tekniske endepunkter er fortsatt åpne. Synlige temalag og routingdata er separate arkitekturbegreper; et lag brukeren ser, er ikke automatisk samme datasett eller representasjon som rutemotoren bruker.
+Kartarkitekturen skal senere kunne kombinere bakgrunnskart med flere sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Fotrute er første implementerte temalag; konkrete datakilder for de øvrige framtidige lagene er ikke besluttet. Synlige temalag og routingdata er separate arkitekturbegreper; et lag brukeren ser, er ikke automatisk samme datasett eller representasjon som rutemotoren bruker.
+
+### Kartografisk spike: RuteApp Sommer
+
+En eksperimentell vektorbasert kartprofil, RuteApp Sommer, testes med OpenFreeMap Positron som dempet bakgrunn. Profilen kombinerer bakgrunnen med subtil 2D-hillshade fra Mapterhorn og egne visningslag for `class=path` og `class=track` fra OpenMapTiles-laget `transportation`. Dette gjør stier og traktorveier tydeligere uten å gjøre vanlige veier mer fremtredende. Fotrute vises fortsatt som eget tematisk lag over profilen.
+
+Kartverket toporaster beholdes som den alternative profilen Kartverket Turkart. En enkel profilvelger brukes kun for sammenligning under utvikling, med RuteApp Sommer som midlertidig standard i spiken. OpenFreeMap, Mapterhorn og den konkrete kartografien er ikke endelig valgte leverandører eller permanent kartdesign. Vektortilenes synlige sti- og traktorveidata er presentasjonsdata og endrer ikke beslutningen om separate OSM-rådata som framtidig routinggrunnlag.
 
 ---
 
@@ -268,10 +285,10 @@ OSM skal derfor ikke bygges inn som en antakelse om at dette alltid vil være en
 Kartinnhold skal forstås i tre kategorier:
 
 1. **Bakgrunnslag** gir visuell kontekst. Kartverket toporaster er første implementerte bakgrunnslag og brukes ikke som routingdata.
-2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første konkrete kandidat er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Et slikt lag kan vises i kartet og kan senere vurderes som berikelse eller kvalitetssignal for routing, men disse rollene er separate. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
-3. **Applikasjonsgenererte kartobjekter** omfatter blant annet punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. De oppstår fra applikasjonens tilstand og beregninger og trenger ikke inngå i det statiske kartlagregisteret for eksterne kilder.
+2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første implementerte temalag er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i routing er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
+3. **Applikasjonsgenererte kartobjekter** omfatter blant annet rutepunkter, foreløpige planleggingslinjer, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. Rutepunkter og den foreløpige linjen er nå implementert som dynamisk kartpresentasjon fra React-featurets state og inngår ikke i det statiske kartlagregisteret for eksterne kilder.
 
-MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Konkret endepunkt og innlastingsmåte for Fotrute er ikke besluttet og avklares i en senere implementasjonsoppgave.
+MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1 og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er kun visualisering; routing og OSM-integrasjon er fortsatt ikke implementert.
 
 ---
 

@@ -16,7 +16,7 @@ RuteApp skal skille tydelig mellom visuelt kartgrunnlag og routbart geografisk d
 ### Visuelt kartgrunnlag
 
 - MapLibre GL JS er valgt som kart- og presentasjonsmotor.
-- Kartverkets toporaster/turkart skal være det primære visuelle bakgrunnskartet i første versjon.
+- Kartverkets toporaster/turkart beholdes som etablert visuelt bakgrunnsalternativ i første versjon.
 - Bakgrunnskartet skal brukes til presentasjon og skal ikke behandles som routingdata eller kilde til routingtopologi.
 - Første implementasjon bruker Kartverkets offisielle WMTS-cache i Web Mercator (EPSG:3857) med tile-mønsteret `https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/{z}/{y}/{x}.png`.
 - Kartarkitekturen skal være lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at `MapView` eller routingarkitekturen må bygges om.
@@ -26,17 +26,21 @@ RuteApp skal skille tydelig mellom visuelt kartgrunnlag og routbart geografisk d
 
 Kartverket har varslet at et nytt topografisk bakgrunnskart skal bli tilgjengelig som WMS/WMTS-tjeneste i løpet av august 2026. Eksisterende `toporaster` brukes inntil en ny tjeneste faktisk er publisert og vurdert; denne beslutningen antar ikke URL eller tjenestenavn for den varslede tjenesten.
 
-Kartverket toporaster er første og foreløpig eneste aktive kartlag, men er ikke en permanent binding. Arkitekturen skal senere kunne støtte sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Med unntak av Fotrute som første kandidat er konkrete datakilder for disse lagene ikke besluttet, og tekniske endepunkter er fortsatt åpne.
+Kartverket toporaster beholdes som konfigurert bakgrunnsalternativ i profilen Kartverket Turkart, og Kartverkets Turrutebase – Fotrute er første aktive temalag. Arkitekturen skal senere kunne støtte flere sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse framtidige lagene er ikke besluttet.
+
+Som en kartografisk spike testes også profilen RuteApp Sommer. Den bruker OpenFreeMap Positron som vektorbasert bakgrunn, en subtil 2D-hillshade fra Mapterhorn og separate visningslag for `class=path` og `class=track` fra OpenMapTiles-laget `transportation`. Kartverket Turkart beholdes som alternativ, og en enkel profilvelger gjør profilene sammenlignbare under utvikling. RuteApp Sommer er midlertidig standard i spiken.
+
+OpenFreeMap, Mapterhorn og den konkrete kartografien er ikke akseptert som permanente leverandør- eller designvalg gjennom denne ADR-en. De fremhevede OpenMapTiles-lagene er kun visningsdata; de er ikke egen OSM-import, rutegraf eller routinggrunnlag og endrer ikke beslutningen om OSM-rådata som planlagt routinggrunnlag.
 
 ### Kartlagmodell
 
 Kartinnhold deles konseptuelt i tre kategorier:
 
 1. **Bakgrunnslag** gir visuell kontekst. Kartverket toporaster er første implementerte bakgrunnslag og er ikke routingdata.
-2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første konkrete kandidat er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i rutemodellen er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
+2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første implementerte temalag er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i rutemodellen er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
 3. **Applikasjonsgenererte kartobjekter** omfatter blant annet punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. De kommer fra applikasjonens tilstand og beregninger og trenger ikke registreres som statiske eksterne kartlag.
 
-MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute er ikke implementert; konkret endepunkt og innlastingsmåte i MapLibre besluttes i en senere implementasjonsoppgave.
+MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1, laget `Fotrute`, og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er visualisering, ikke routinggrunnlag. Routing og OSM-integrasjon er fortsatt ikke implementert.
 
 ### Routinggrunnlag
 
@@ -91,7 +95,9 @@ En separat routingmodell bevarer også muligheten til å supplere OSM med andre 
 - En eventuell overgang til Kartverkets varslede nye topografiske tjeneste skal kunne gjøres i kartkonfigurasjonen uten å påvirke routingmodellen.
 - Synlige tematiske kartlag og routingdata skal behandles som separate arkitekturbegreper, selv når de beskriver de samme typene geografiske objekter.
 - Applikasjonsgenererte kartobjekter skal holdes konseptuelt atskilt fra eksterne bakgrunnslag og tematiske lag.
-- At Fotrute eventuelt vises som tematisk lag, innebærer ikke at datasettet automatisk inngår i rutegrafen eller påvirker rutekostnad.
+- At Fotrute vises som tematisk lag, innebærer ikke at datasettet automatisk inngår i rutegrafen eller påvirker rutekostnad.
+- Kartprofiler kan kombinere ulike base-stiler og presentasjonslag uten å endre routingarkitekturen.
+- Terrengskygge og fremhevede sti-/traktorveilag i RuteApp Sommer er eksperimentell kartografi og må evalueres før et permanent valg tas.
 - Virtuelle terrengforbindelser må forbli eksplisitte forbindelser i routingmodellen, også når de senere vurderes ved hjelp av supplerende data.
 
 ## Alternativer som foreløpig ikke er valgt
@@ -110,5 +116,5 @@ Disse alternativene er ikke nødvendigvis permanent avvist, men de inngår ikke 
 - Hvordan skal den interne grafmodellen utformes konkret?
 - Hvordan skal virtuelle terrengforbindelser genereres?
 - Hvilke terreng- og barriereregler skal senere gjelde?
-- Hvilket konkret endepunkt og hvilken innlastingsmåte i MapLibre skal brukes for Turrutebase – Fotrute?
 - Skal Fotrute senere berike routinggrunnlaget eller påvirke rutekostnad, og i så fall hvordan?
+- Hvilken kartprofil, leverandør og kartografi skal velges etter evaluering av spiken?

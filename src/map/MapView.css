@@ -1,4 +1,72 @@
+.map-view-shell,
 .map-view {
   position: absolute;
   inset: 0;
+}
+
+.map-profile-control {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: grid;
+  gap: 0.25rem;
+  min-width: 10.5rem;
+  padding: 0.55rem 0.65rem 0.65rem;
+  border: 1px solid rgb(33 76 59 / 20%);
+  border-radius: 0.45rem;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 1px 5px rgb(24 40 33 / 16%);
+}
+
+.map-profile-control span {
+  color: #52615a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.map-profile-control select {
+  min-height: 2.25rem;
+  border: 1px solid #bac5c0;
+  border-radius: 0.35rem;
+  color: #17251f;
+  background: #ffffff;
+}
+
+.route-marker {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+  background: #2f6b52;
+  box-shadow: 0 1px 5px rgb(23 37 31 / 45%);
+  cursor: grab;
+}
+
+.route-marker[data-role='end'] {
+  background: #934640;
+}
+
+.route-marker[data-role='via'] {
+  color: #214c3b;
+  border-color: #214c3b;
+  background: #ffffff;
+}
+
+.route-marker:active {
+  cursor: grabbing;
+}
+
+.route-marker:focus-visible {
+  outline: 3px solid rgb(23 79 122 / 45%);
+  outline-offset: 2px;
 }

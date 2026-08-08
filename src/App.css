@@ -102,6 +102,10 @@
   background: #2f6b52;
 }
 
+.point-marker--end {
+  background: #934640;
+}
+
 .route-point div {
   display: grid;
   gap: 0.1rem;
@@ -115,6 +119,57 @@
 .route-point strong {
   color: #26342e;
   font-size: 0.95rem;
+}
+
+.route-summary {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.5rem 0 0;
+}
+
+.route-summary div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #e2e6e3;
+}
+
+.route-summary dt {
+  color: #66746d;
+  font-size: 0.85rem;
+}
+
+.route-summary dd {
+  margin: 0;
+  color: #17251f;
+  font-weight: 700;
+}
+
+.route-disclaimer {
+  font-size: 0.82rem;
+}
+
+.clear-route-button {
+  min-height: 2.75rem;
+  margin-top: 1.25rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid #aebbb5;
+  border-radius: 0.45rem;
+  color: #214c3b;
+  font-weight: 700;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.clear-route-button:hover {
+  background: #f1f5f3;
+}
+
+.clear-route-button:focus-visible {
+  outline: 3px solid rgb(47 107 82 / 30%);
+  outline-offset: 2px;
 }
 
 @media (max-width: 720px) {
