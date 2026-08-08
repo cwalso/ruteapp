@@ -33,26 +33,14 @@
   min-height: 0;
 }
 
-.map-placeholder {
+.map-region {
   grid-area: map;
+  position: relative;
   min-height: 32rem;
-  display: grid;
-  place-items: center;
-  padding: 1.5rem;
-  color: #405149;
+  overflow: hidden;
   background: #e7ebe8;
 }
 
-.placeholder-content {
-  max-width: 26rem;
-  padding: 1.5rem;
-  text-align: center;
-  border: 1px dashed #9aa8a1;
-  border-radius: 0.75rem;
-  background: rgb(255 255 255 / 55%);
-}
-
-.placeholder-label,
 .panel-label {
   display: block;
   margin-bottom: 0.5rem;
@@ -63,14 +51,12 @@
   text-transform: uppercase;
 }
 
-.placeholder-content h2,
 .route-panel h2 {
   margin: 0;
   color: #17251f;
   font-size: 1.4rem;
 }
 
-.placeholder-content p,
 .route-panel p {
   margin: 0.6rem 0 0;
   line-height: 1.55;
@@ -145,7 +131,7 @@
       'panel';
   }
 
-  .map-placeholder {
+  .map-region {
     min-height: 52svh;
   }
 

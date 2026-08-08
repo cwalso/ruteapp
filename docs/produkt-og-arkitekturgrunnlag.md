@@ -211,7 +211,7 @@ Dette er separate ansvarsområder og skal ikke behandles som samme datagrunnlag.
 
 MapLibre GL JS er valgt som kart- og presentasjonsmotor. Kartverkets toporaster/turkart skal brukes som primært visuelt bakgrunnskart i første versjon.
 
-Kartverket-kartet er et presentasjonsgrunnlag og skal ikke behandles som routingdata eller kilde til routingtopologi. Implementasjonen skal bruke en Kartverket-tjeneste som er egnet for MapLibre og Web Mercator (EPSG:3857). Gjeldende krav til kreditering og bruksvilkår skal ivaretas og kontrolleres på nytt før produksjonssetting.
+Kartverket-kartet er et presentasjonsgrunnlag og skal ikke behandles som routingdata eller kilde til routingtopologi. Første implementasjon bruker Kartverkets offisielle WMTS-cache for `toporaster` i Web Mercator (EPSG:3857). Tile-mønsteret og øvrig kartkonfigurasjon er isolert under `src/map/`, slik at bakgrunnskartet senere kan byttes uten å påvirke routingarkitekturen. Gjeldende krav til kreditering og bruksvilkår skal ivaretas og kontrolleres på nytt før produksjonssetting.
 
 MapLibre skal vise bakgrunnskart, geografiske objekter og beregnede ruter, men skal ikke eie rutelogikk.
 

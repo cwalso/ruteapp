@@ -18,8 +18,11 @@ RuteApp skal skille tydelig mellom visuelt kartgrunnlag og routbart geografisk d
 - MapLibre GL JS er valgt som kart- og presentasjonsmotor.
 - Kartverkets toporaster/turkart skal være det primære visuelle bakgrunnskartet i første versjon.
 - Bakgrunnskartet skal brukes til presentasjon og skal ikke behandles som routingdata eller kilde til routingtopologi.
-- Integrasjonen skal bruke en Kartverket-tjeneste som er egnet for MapLibre og Web Mercator (EPSG:3857).
+- Første implementasjon bruker Kartverkets offisielle WMTS-cache i Web Mercator (EPSG:3857) med tile-mønsteret `https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/{z}/{y}/{x}.png`.
+- Kartkilden er isolert i `src/map/mapConfig.ts`, slik at den senere kan byttes uten å endre routingarkitekturen.
 - Gjeldende krav til kreditering og bruksvilkår skal ivaretas. Vilkårene skal kontrolleres på nytt før produksjonssetting.
+
+Kartverket har varslet at et nytt topografisk bakgrunnskart skal bli tilgjengelig som WMS/WMTS-tjeneste i løpet av august 2026. Eksisterende `toporaster` brukes inntil en ny tjeneste faktisk er publisert og vurdert; denne beslutningen antar ikke URL eller tjenestenavn for den varslede tjenesten.
 
 ### Routinggrunnlag
 
@@ -69,6 +72,7 @@ En separat routingmodell bevarer også muligheten til å supplere OSM med andre 
 - Kartverkets bakgrunnskart kan ikke brukes til å utlede forbindelser i rutegrafen.
 - OSM-data må importeres, valideres og transformeres før de kan brukes av rutemotoren.
 - Kreditering, bruksvilkår og teknisk egnethet for valgt Kartverket-tjeneste må ivaretas i kartintegrasjonen.
+- En eventuell overgang til Kartverkets varslede nye topografiske tjeneste skal kunne gjøres i kartkonfigurasjonen uten å påvirke routingmodellen.
 - Virtuelle terrengforbindelser må forbli eksplisitte forbindelser i routingmodellen, også når de senere vurderes ved hjelp av supplerende data.
 
 ## Alternativer som foreløpig ikke er valgt
@@ -87,5 +91,3 @@ Disse alternativene er ikke nødvendigvis permanent avvist, men de inngår ikke 
 - Hvordan skal den interne grafmodellen utformes konkret?
 - Hvordan skal virtuelle terrengforbindelser genereres?
 - Hvilke terreng- og barriereregler skal senere gjelde?
-- Hvilken konkret Kartverket-tjeneste og endepunkt skal brukes for bakgrunnskartet?
-

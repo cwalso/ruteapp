@@ -1,4 +1,5 @@
 import './App.css'
+import MapView from './map/MapView'
 
 function App() {
   return (
@@ -9,20 +10,16 @@ function App() {
       </header>
 
       <main className="app-main">
-        <section className="map-placeholder" aria-labelledby="map-title">
-          <div className="placeholder-content">
-            <span className="placeholder-label">Kartområde</span>
-            <h2 id="map-title">Kartet kommer her</h2>
-            <p>Her vil du senere kunne velge start og mål.</p>
-          </div>
+        <section className="map-region" aria-label="Kartområde">
+          <MapView />
         </section>
 
         <aside className="route-panel" aria-labelledby="route-panel-title">
           <span className="panel-label">Ruteplanlegging</span>
           <h2 id="route-panel-title">Finn veien</h2>
           <p>
-            Når kartet er på plass, kan du velge to punkter og planlegge
-            ruten mellom dem.
+            Valg av start, mål og ruteberegning blir tilgjengelig i et senere
+            steg.
           </p>
 
           <div className="route-points" aria-label="Valgte rutepunkter">

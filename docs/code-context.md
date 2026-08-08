@@ -24,13 +24,15 @@ npm
 
 Det er foreløpig ikke implementert produksjonsklar routingfunksjonalitet.
 
-MapLibre er foreløpig ikke integrert.
+MapLibre GL JS er installert og integrert. Applikasjonen viser et interaktivt kart med Kartverkets toporaster som visuelt bakgrunnskart.
+
+Routing, OSM-integrasjon, rutegraf og rutemotor er foreløpig ikke implementert.
 
 ## Besluttet kart- og datagrunnlag
 
-MapLibre GL JS er valgt som presentasjonsmotor, og Kartverkets toporaster/turkart er planlagt som primært visuelt bakgrunnskart. OpenStreetMap-rådata er valgt som planlagt primært grunnlag for det routbare sti- og veinettet; renderte kartfliser skal ikke brukes som routingdata.
+MapLibre GL JS brukes som presentasjonsmotor, og Kartverkets toporaster brukes som visuelt bakgrunnskart. OpenStreetMap-rådata er valgt som planlagt primært grunnlag for det routbare sti- og veinettet; renderte kartfliser skal ikke brukes som routingdata.
 
-Kartverkets høyde-, terreng- og friluftsdata kan senere berike routinggrunnlaget og vurderingen av virtuelle terrengforbindelser. MapLibre, Kartverket-integrasjonen, OSM-import, rutegraf og rutemotor er foreløpig ikke implementert. Skillet mellom visuelt kartgrunnlag og routinggrunnlag er dokumentert i [ADR-001](decisions/ADR-001-kart-og-geografisk-datagrunnlag.md).
+Kartverkets høyde-, terreng- og friluftsdata kan senere berike routinggrunnlaget og vurderingen av virtuelle terrengforbindelser. Kartintegrasjonen er implementert under `src/map/`, mens OSM-import, rutegraf og rutemotor fortsatt ikke er implementert. Skillet mellom visuelt kartgrunnlag og routinggrunnlag er dokumentert i [ADR-001](decisions/ADR-001-kart-og-geografisk-datagrunnlag.md).
 
 ## Repositorystruktur
 
@@ -65,6 +67,8 @@ kartinteraksjon
 visualisering av geografiske objekter
 
 Ruteberegningsalgoritmer skal ikke ligge her.
+
+`MapView.tsx` eier MapLibre-kartets livssyklus og presentasjon. `mapConfig.ts` isolerer Kartverkets tile-URL, kreditering og standard startutsnitt fra resten av applikasjonen.
 
 ### `/src/routing`
 
