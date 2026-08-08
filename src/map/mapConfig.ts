@@ -1,29 +1,16 @@
 import type { MapOptions } from 'maplibre-gl'
+import { activeMapLayers } from './mapLayers'
 
-const KARTVERKET_TILE_URL =
-  'https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/{z}/{y}/{x}.png'
-
-const KARTVERKET_ATTRIBUTION = '© Kartverket'
+const NERSKOGEN_CENTER: [number, number] = [9.6012, 62.7802]
 
 export const mapConfig = {
-  center: [10.4, 63.43] as [number, number],
-  zoom: 9,
+  center: NERSKOGEN_CENTER,
+  zoom: 12.5,
   style: {
     version: 8,
-    sources: {
-      kartverketToporaster: {
-        type: 'raster',
-        tiles: [KARTVERKET_TILE_URL],
-        tileSize: 256,
-        attribution: KARTVERKET_ATTRIBUTION,
-      },
-    },
-    layers: [
-      {
-        id: 'kartverket-toporaster',
-        type: 'raster',
-        source: 'kartverketToporaster',
-      },
-    ],
+    sources: Object.fromEntries(
+      activeMapLayers.map(({ source }) => [source.id, source.definition]),
+    ),
+    layers: activeMapLayers.map(({ layer }) => layer),
   },
 } satisfies Pick<MapOptions, 'center' | 'zoom' | 'style'>

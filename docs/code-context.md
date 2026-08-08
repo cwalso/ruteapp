@@ -26,6 +26,8 @@ Det er foreløpig ikke implementert produksjonsklar routingfunksjonalitet.
 
 MapLibre GL JS er installert og integrert. Applikasjonen viser et interaktivt kart med Kartverkets toporaster som visuelt bakgrunnskart.
 
+Nerskogen brukes som standard utviklings- og testutsnitt med sentrum omtrent ved lengdegrad 9.6012 og breddegrad 62.7802.
+
 Routing, OSM-integrasjon, rutegraf og rutemotor er foreløpig ikke implementert.
 
 ## Besluttet kart- og datagrunnlag
@@ -33,6 +35,10 @@ Routing, OSM-integrasjon, rutegraf og rutemotor er foreløpig ikke implementert.
 MapLibre GL JS brukes som presentasjonsmotor, og Kartverkets toporaster brukes som visuelt bakgrunnskart. OpenStreetMap-rådata er valgt som planlagt primært grunnlag for det routbare sti- og veinettet; renderte kartfliser skal ikke brukes som routingdata.
 
 Kartverkets høyde-, terreng- og friluftsdata kan senere berike routinggrunnlaget og vurderingen av virtuelle terrengforbindelser. Kartintegrasjonen er implementert under `src/map/`, mens OSM-import, rutegraf og rutemotor fortsatt ikke er implementert. Skillet mellom visuelt kartgrunnlag og routinggrunnlag er dokumentert i [ADR-001](decisions/ADR-001-kart-og-geografisk-datagrunnlag.md).
+
+Kartarkitekturen er lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at `MapView` eller routingarkitekturen må bygges om. Kartverket toporaster er eneste aktive lag nå og er ikke en permanent binding til dette kartproduktet.
+
+Arkitekturen skal senere kunne støtte sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse lagene er ikke besluttet. Et synlig tematisk kartlag og dataene rutemotoren bruker er separate arkitekturbegreper.
 
 ## Repositorystruktur
 
@@ -68,7 +74,7 @@ visualisering av geografiske objekter
 
 Ruteberegningsalgoritmer skal ikke ligge her.
 
-`MapView.tsx` eier MapLibre-kartets livssyklus og presentasjon. `mapConfig.ts` isolerer Kartverkets tile-URL, kreditering og standard startutsnitt fra resten av applikasjonen.
+`MapView.tsx` eier MapLibre-kartets livssyklus og presentasjon. `mapLayers.ts` beskriver aktive kartlag og kildene deres; foreløpig inneholder registeret bare Kartverket toporaster. `mapConfig.ts` bygger MapLibre-stilen fra lagkonfigurasjonen og inneholder standardutsnittet for Nerskogen.
 
 ### `/src/routing`
 

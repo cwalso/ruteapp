@@ -211,9 +211,15 @@ Dette er separate ansvarsområder og skal ikke behandles som samme datagrunnlag.
 
 MapLibre GL JS er valgt som kart- og presentasjonsmotor. Kartverkets toporaster/turkart skal brukes som primært visuelt bakgrunnskart i første versjon.
 
+Kartarkitekturen skal være lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at MapView eller routingarkitekturen må bygges om.
+
 Kartverket-kartet er et presentasjonsgrunnlag og skal ikke behandles som routingdata eller kilde til routingtopologi. Første implementasjon bruker Kartverkets offisielle WMTS-cache for `toporaster` i Web Mercator (EPSG:3857). Tile-mønsteret og øvrig kartkonfigurasjon er isolert under `src/map/`, slik at bakgrunnskartet senere kan byttes uten å påvirke routingarkitekturen. Gjeldende krav til kreditering og bruksvilkår skal ivaretas og kontrolleres på nytt før produksjonssetting.
 
 MapLibre skal vise bakgrunnskart, geografiske objekter og beregnede ruter, men skal ikke eie rutelogikk.
+
+Kartverket toporaster er det første og foreløpig eneste implementerte bakgrunnskartet, men løsningen er ikke permanent bundet til dette kartproduktet. Nerskogen brukes som standard utviklings- og testutsnitt.
+
+Kartarkitekturen skal senere kunne kombinere bakgrunnskart med sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse lagene er ikke besluttet. Synlige temalag og routingdata er separate arkitekturbegreper; et lag brukeren ser, er ikke automatisk samme datasett eller representasjon som rutemotoren bruker.
 
 ---
 

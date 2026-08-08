@@ -19,10 +19,14 @@ RuteApp skal skille tydelig mellom visuelt kartgrunnlag og routbart geografisk d
 - Kartverkets toporaster/turkart skal være det primære visuelle bakgrunnskartet i første versjon.
 - Bakgrunnskartet skal brukes til presentasjon og skal ikke behandles som routingdata eller kilde til routingtopologi.
 - Første implementasjon bruker Kartverkets offisielle WMTS-cache i Web Mercator (EPSG:3857) med tile-mønsteret `https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/{z}/{y}/{x}.png`.
-- Kartkilden er isolert i `src/map/mapConfig.ts`, slik at den senere kan byttes uten å endre routingarkitekturen.
+- Kartarkitekturen skal være lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at `MapView` eller routingarkitekturen må bygges om.
+- Kartkilden er isolert i `src/map/mapLayers.ts`, mens `src/map/mapConfig.ts` bygger kartstilen fra aktive lag. Kartkilder kan dermed senere byttes uten å endre `MapView` eller routingarkitekturen.
+- Nerskogen brukes som standard utviklings- og testutsnitt.
 - Gjeldende krav til kreditering og bruksvilkår skal ivaretas. Vilkårene skal kontrolleres på nytt før produksjonssetting.
 
 Kartverket har varslet at et nytt topografisk bakgrunnskart skal bli tilgjengelig som WMS/WMTS-tjeneste i løpet av august 2026. Eksisterende `toporaster` brukes inntil en ny tjeneste faktisk er publisert og vurdert; denne beslutningen antar ikke URL eller tjenestenavn for den varslede tjenesten.
+
+Kartverket toporaster er første og foreløpig eneste aktive kartlag, men er ikke en permanent binding. Arkitekturen skal senere kunne støtte sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse lagene er ikke besluttet.
 
 ### Routinggrunnlag
 
@@ -73,6 +77,7 @@ En separat routingmodell bevarer også muligheten til å supplere OSM med andre 
 - OSM-data må importeres, valideres og transformeres før de kan brukes av rutemotoren.
 - Kreditering, bruksvilkår og teknisk egnethet for valgt Kartverket-tjeneste må ivaretas i kartintegrasjonen.
 - En eventuell overgang til Kartverkets varslede nye topografiske tjeneste skal kunne gjøres i kartkonfigurasjonen uten å påvirke routingmodellen.
+- Synlige tematiske kartlag og routingdata skal behandles som separate arkitekturbegreper, selv når de beskriver de samme typene geografiske objekter.
 - Virtuelle terrengforbindelser må forbli eksplisitte forbindelser i routingmodellen, også når de senere vurderes ved hjelp av supplerende data.
 
 ## Alternativer som foreløpig ikke er valgt
