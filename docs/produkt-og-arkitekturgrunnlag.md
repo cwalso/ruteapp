@@ -107,7 +107,7 @@ Målet er å bevise at RuteApps grunnidé fungerer.
 
 ## 4.1 Brukerhistorie
 
-> Som bruker ønsker jeg å velge et startpunkt og et målpunkt i kartet og få beregnet korteste rute mellom punktene via tilgjengelige stier og nødvendige korte terrengforbindelser.
+> Som bruker ønsker jeg å velge et startpunkt og et målpunkt i kartet og få beregnet korteste egnede fotturrute mellom punktene via tilgjengelige stier og nødvendige korte terrengforbindelser.
 
 ---
 
@@ -121,7 +121,7 @@ Brukeren:
 4. velger målpunkt
 5. angir eller bruker standard maksimal stikoblingsavstand
 6. velger «Finn rute»
-7. får beregnet korteste rute
+7. får beregnet korteste egnede fotturrute
 8. ser ruten i kartet
 9. ser grunnleggende informasjon om ruten
 
@@ -142,7 +142,7 @@ MVP skal støtte:
 
 ### Ruting
 
-* finne korteste rute
+* finne korteste egnede fotturrute
 * følge registrerte stier og relevante gangbare veier
 * bruke virtuelle terrengforbindelser
 * konfigurere maksimal tillatt stikobling, eksempelvis 200 meter
@@ -219,7 +219,7 @@ MapLibre skal vise bakgrunnskart, geografiske objekter og beregnede ruter, men s
 
 Kartverket toporaster er det første og foreløpig eneste implementerte bakgrunnskartet, men løsningen er ikke permanent bundet til dette kartproduktet. Nerskogen brukes som standard utviklings- og testutsnitt.
 
-Kartarkitekturen skal senere kunne kombinere bakgrunnskart med sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse lagene er ikke besluttet. Synlige temalag og routingdata er separate arkitekturbegreper; et lag brukeren ser, er ikke automatisk samme datasett eller representasjon som rutemotoren bruker.
+Kartarkitekturen skal senere kunne kombinere bakgrunnskart med sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Med unntak av Fotrute som første kandidat er konkrete datakilder for disse lagene ikke besluttet, og tekniske endepunkter er fortsatt åpne. Synlige temalag og routingdata er separate arkitekturbegreper; et lag brukeren ser, er ikke automatisk samme datasett eller representasjon som rutemotoren bruker.
 
 ---
 
@@ -262,6 +262,16 @@ Routinggrunnlaget skal senere kunne berikes med norske offentlige data, blant an
 Disse kildene er ikke primært routinggrunnlag i første MVP. Høyde-, terreng- og barrieredata er særlig relevante for senere vurdering av virtuelle terrengforbindelser, for eksempel om en kort geometrisk forbindelse innebærer urimelig høydeforskjell eller andre terrengmessige problemer.
 
 OSM skal derfor ikke bygges inn som en antakelse om at dette alltid vil være eneste rutekilde. Konkrete regler for berikelse og vurdering av virtuelle forbindelser er fortsatt åpne.
+
+## 7.4 Kartlagmodell
+
+Kartinnhold skal forstås i tre kategorier:
+
+1. **Bakgrunnslag** gir visuell kontekst. Kartverket toporaster er første implementerte bakgrunnslag og brukes ikke som routingdata.
+2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første konkrete kandidat er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Et slikt lag kan vises i kartet og kan senere vurderes som berikelse eller kvalitetssignal for routing, men disse rollene er separate. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
+3. **Applikasjonsgenererte kartobjekter** omfatter blant annet punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. De oppstår fra applikasjonens tilstand og beregninger og trenger ikke inngå i det statiske kartlagregisteret for eksterne kilder.
+
+MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Konkret endepunkt og innlastingsmåte for Fotrute er ikke besluttet og avklares i en senere implementasjonsoppgave.
 
 ---
 
@@ -405,7 +415,7 @@ i stedet for:
 
 # 11. Rutekostnad
 
-MVP skal i utgangspunktet finne korteste rute.
+MVP skal i utgangspunktet finne korteste egnede fotturrute. Den første routing-MVP-en gjelder ferdsel til fots. Ski- og sykkelruting er mulig framtidig utvikling, men skal ikke generaliseres inn i den første rutemodellen uten et konkret behov.
 
 En registrert kant kan derfor ha:
 
@@ -820,7 +830,7 @@ A → B.
 * kart
 * start
 * mål
-* korteste rute
+* korteste egnede fotturrute
 * stinett
 * virtuelle stikoblinger
 
@@ -974,7 +984,7 @@ Første milepæl er ikke en komplett turapp.
 
 Den er:
 
-> **Å bevise at vi kan velge to punkter i et norsk kart og automatisk finne en fornuftig korteste rute mellom dem gjennom et stinett som også kan inneholde virtuelle forbindelser.**
+> **Å bevise at vi kan velge to punkter i et norsk kart og automatisk finne en fornuftig korteste fotturrute mellom dem gjennom et stinett som også kan inneholde virtuelle forbindelser.**
 
 Dette skal testes i områder brukeren kjenner godt.
 
@@ -995,7 +1005,7 @@ Disse testene vil være viktigere enn design og ekstra funksjonalitet i første 
 
 MVP 1 er vellykket når:
 
-> Brukeren på mobil eller desktop kan åpne RuteApp i nettleseren, velge A og B i kartet og få presentert en troverdig korteste rute som følger tilgjengelig stinett og ved behov bruker tydelig identifiserte virtuelle terrengforbindelser.
+> Brukeren på mobil eller desktop kan åpne RuteApp i nettleseren, velge A og B i kartet og få presentert en troverdig korteste fotturrute som følger tilgjengelig stinett og ved behov bruker tydelig identifiserte virtuelle terrengforbindelser.
 
 Hvis dette fungerer godt i reelle områder hvor ordinære kart- og ruteløsninger har problemer med manglende sammenkobling av stier, er RuteApps viktigste tekniske hypotese bevist.
 

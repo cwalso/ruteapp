@@ -38,7 +38,15 @@ Kartverkets høyde-, terreng- og friluftsdata kan senere berike routinggrunnlage
 
 Kartarkitekturen er lagbasert og kildeuavhengig. MapLibre er presentasjonsmotor, mens bakgrunnskart og tematiske kartlag skal kunne konfigureres, byttes og kombineres uten at `MapView` eller routingarkitekturen må bygges om. Kartverket toporaster er eneste aktive lag nå og er ikke en permanent binding til dette kartproduktet.
 
-Arkitekturen skal senere kunne støtte sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse lagene er ikke besluttet. Et synlig tematisk kartlag og dataene rutemotoren bruker er separate arkitekturbegreper.
+Arkitekturen skal senere kunne støtte sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Med unntak av Fotrute som første kandidat er konkrete datakilder for disse lagene ikke besluttet, og tekniske endepunkter er fortsatt åpne. Et synlig tematisk kartlag og dataene rutemotoren bruker er separate arkitekturbegreper.
+
+Kartinnholdet deles konseptuelt i tre kategorier:
+
+1. Bakgrunnslag gir visuell kontekst. Kartverket toporaster er første implementerte bakgrunnslag og er ikke routingdata.
+2. Tematiske lag viser eksterne fagdata oppå bakgrunnskartet. Første konkrete kandidat er Kartverkets Turrutebase – Fotrute, som beskriver registrerte fotturruter og ikke alle ordinære stier. Fotrute kan senere vurderes som berikelse eller kvalitetssignal for routing, men denne rollen er separat fra visualisering og er ikke besluttet.
+3. Applikasjonsgenererte kartobjekter, som punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater, kommer fra applikasjonens tilstand og beregninger. De trenger ikke ligge i det statiske kartlagregisteret for eksterne kilder.
+
+Fotrute er ikke implementert. Konkret endepunkt og innlastingsmåte i MapLibre er åpne spørsmål for en senere oppgave.
 
 ## Repositorystruktur
 
@@ -74,7 +82,7 @@ visualisering av geografiske objekter
 
 Ruteberegningsalgoritmer skal ikke ligge her.
 
-`MapView.tsx` eier MapLibre-kartets livssyklus og presentasjon. `mapLayers.ts` beskriver aktive kartlag og kildene deres; foreløpig inneholder registeret bare Kartverket toporaster. `mapConfig.ts` bygger MapLibre-stilen fra lagkonfigurasjonen og inneholder standardutsnittet for Nerskogen.
+`MapView.tsx` eier MapLibre-kartets livssyklus og presentasjon. `mapLayers.ts` beskriver aktive eksterne bakgrunnslag og tematiske lag og kildene deres; foreløpig inneholder registeret bare Kartverket toporaster. Applikasjonsgenererte kartobjekter kan senere håndteres dynamisk uten å inngå i dette statiske registeret. `mapConfig.ts` bygger MapLibre-stilen fra lagkonfigurasjonen og inneholder standardutsnittet for Nerskogen.
 
 ### `/src/routing`
 
@@ -187,13 +195,15 @@ Ruteberegningen vurderer ordinære forbindelser og tillatte virtuelle forbindels
 
 ↓
 
-Korteste egnede rute beregnes
+Korteste egnede fotturrute beregnes
 
 ↓
 
 Ruten vises i kartet
 
 Denne kjeden skal styre prioriteringene i den tidlige utviklingen.
+
+Den første routing-MVP-en gjelder fottur. Ski- og sykkelruting hører til mulig framtidig utvikling og skal ikke drive fram en generell fleraktivitetsmodell nå.
 
 ## Vedlikehold av dokumentet
 
