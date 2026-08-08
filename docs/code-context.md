@@ -21,14 +21,15 @@ TypeScript
 Vite
 ESLint
 npm
+Vitest
 
-Det er foreløpig ikke implementert produksjonsklar routingfunksjonalitet.
+En første isolert routingkjerne er implementert og testet, men den er ennå ikke koblet til applikasjonens rutepunkter eller ekte geografiske data.
 
 MapLibre GL JS er installert og integrert. Applikasjonen har to valgbare kartprofiler: den eksperimentelle standardprofilen RuteApp Sommer og Kartverket Turkart. Turrutebase – Fotrute vises som tematisk lag over begge profilene.
 
 Nerskogen brukes som standard utviklings- og testutsnitt med sentrum omtrent ved lengdegrad 9.6012 og breddegrad 62.7802.
 
-Routing, OSM-integrasjon, rutegraf og rutemotor er foreløpig ikke implementert.
+En intern rutegraf og A*-rutemotor er implementert under `src/routing/`. OSM-integrasjon, automatisk generering av virtuelle forbindelser og kobling mellom rutemotoren og UI-et er foreløpig ikke implementert.
 
 Interaktiv rutepunktplanlegging er implementert som et eget featurelag. Brukeren kan legge til en ordnet liste med punkt A, vilkårlig antall mellompunkter og punkt B, dra punktene, fjerne enkeltpunkter med høyreklikk og tømme listen. En foreløpig planleggingslinje og geografisk storcirkelavstand oppdateres umiddelbart når punktgeometrien endres. Linjen og avstanden er direkte geometri mellom punktene, ikke faktisk routing på sti- og veinett. Høydeprofil er heller ikke implementert.
 
@@ -50,7 +51,17 @@ Kartinnholdet deles konseptuelt i tre kategorier:
 2. Tematiske lag viser eksterne fagdata oppå bakgrunnskartet. Første implementerte temalag er Kartverkets Turrutebase – Fotrute, som beskriver registrerte fotturruter og ikke alle ordinære stier. Fotrute kan senere vurderes som berikelse eller kvalitetssignal for routing, men denne rollen er separat fra visualisering og er ikke besluttet.
 3. Applikasjonsgenererte kartobjekter, som punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater, kommer fra applikasjonens tilstand og beregninger. De trenger ikke ligge i det statiske kartlagregisteret for eksterne kilder.
 
-Fotrute hentes fra Kartverkets Turrutebase WMS med WMS 1.1.1 og vises som et transparent rasterlag i Web Mercator over begge kartprofilene. Dette er kun kartvisualisering; routing og OSM-integrasjon er fortsatt ikke implementert.
+Fotrute hentes fra Kartverkets Turrutebase WMS med WMS 1.1.1 og vises som et transparent rasterlag i Web Mercator over begge kartprofilene. Dette er kun kartvisualisering og inngår ikke i routingkjernen; OSM-integrasjon er fortsatt ikke implementert.
+
+## Besluttet routingarkitektur
+
+Routingkjernen for første MVP kjører i nettleseren og er implementert i TypeScript uten avhengigheter til React, MapLibre eller OSM-format. A* er første algoritme og arbeider på en eksplisitt intern graf med noder og rettede edges.
+
+Grafmodellen skiller mellom fysisk `distanceMeters` og optimaliseringsverdien `cost`. Ordinære edges kan ha typene `path`, `track` og `road`, mens virtuelle terrengforbindelser representeres eksplisitt med typen `virtual`. A* har ingen særlogikk for edge-typene og vurderer alle forbindelser gjennom deres `cost`. I den første modellen kan cost ikke være lavere enn fysisk distanse.
+
+Geografisk luftlinjeavstand brukes som A*-heuristikk. Den samme delte Haversine-funksjonen brukes av den foreløpige avstandsberegningen i route-planning-featuret. En deterministisk testgraf dekker ordinær korteste rute, en straffet virtuell edge, en nødvendig virtuell edge og ingen rute.
+
+OSM-rådata skal senere transformeres til den interne grafmodellen i et separat steg. Via-routing kan senere bygges som delruter mellom påfølgende rutepunkter. Høydedata og høydeprofil skal behandles separat etter at en rutegeometri er funnet. Beslutningen og åpne spørsmål er dokumentert i [ADR-002](decisions/ADR-002-routingarkitektur.md).
 
 ## Repositorystruktur
 
@@ -92,7 +103,7 @@ Ruteberegningsalgoritmer skal ikke ligge her.
 
 ### `/src/routing`
 
-Reservert for routingrelatert domenelogikk i den nåværende prosjektstrukturen.
+Inneholder den første UI-uavhengige routingkjernen.
 
 Forventede ansvarsområder:
 
@@ -103,9 +114,9 @@ kostnadsmodeller
 virtuelle terrengforbindelser
 routingrelaterte domeneregler
 
-Routinglogikken skal så langt som mulig kunne brukes og testes uavhengig av React-komponentene.
+`routingTypes.ts` definerer noder, edges, graf og ruteresultat. `routingGraph.ts` bygger nodeoppslag og adjacency for utgående edges fra vanlige TypeScript-data. `aStar.ts` beregner ruter etter laveste cost og returnerer ordnede node-id-er og edges samt samlet distanse og cost.
 
-Denne logiske ansvarsgrensen avgjør ikke hvor den endelige rutemotoren skal kjøre. Valget mellom nettleser, backend eller en annen kjøremekanisme er fortsatt åpent.
+Routinglogikken kan brukes og testes uavhengig av React-komponenter, MapLibre og OSM-format. Første MVP kjører kjernen i nettleseren, men UI-et bruker den ikke ennå.
 
 ### `/src/services`
 
@@ -122,6 +133,8 @@ Felles TypeScript-typer og interfaces for domeneobjekter og datastrukturer.
 Generelle hjelpefunksjoner.
 
 Mappen skal ikke brukes som oppsamlingssted for domenelogikk som egentlig hører hjemme i andre moduler.
+
+`geographicDistance.ts` inneholder den delte geografiske storcirkelberegningen som brukes av både rutepunktplanleggingen og A*-heuristikken.
 
 ### `/docs`
 
@@ -177,7 +190,7 @@ Kartmodulen skal vise og håndtere geografisk informasjon.
 
 Routingmodulen skal håndtere forbindelser og beregne ruter.
 
-Dette beskriver en logisk modulgrense, ikke en besluttet fysisk plassering av rutemotoren.
+Routingkjernen for første MVP kjører i nettleseren, men modulgrensen holder den uavhengig av UI og kartpresentasjon.
 
 Tjenestelaget skal hente og eventuelt transformere eksterne data.
 

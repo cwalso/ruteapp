@@ -259,7 +259,7 @@ OSM inneholder blant annet:
 
 OSM-data skal transformeres til en graf som rutemotoren kan arbeide på. Routinggrafen skal etableres uavhengig av MapLibre og det visuelle bakgrunnskartet.
 
-Konkret import-, prosesserings- og kjøremekanisme for OSM-data og rutemotor er foreløpig ikke besluttet.
+Routingkjernen for første MVP kjører i nettleseren. Konkret import- og preprocessingmekanisme for OSM-data er fortsatt ikke besluttet.
 
 ---
 
@@ -288,7 +288,7 @@ Kartinnhold skal forstås i tre kategorier:
 2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første implementerte temalag er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i routing er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
 3. **Applikasjonsgenererte kartobjekter** omfatter blant annet rutepunkter, foreløpige planleggingslinjer, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. Rutepunkter og den foreløpige linjen er nå implementert som dynamisk kartpresentasjon fra React-featurets state og inngår ikke i det statiske kartlagregisteret for eksterne kilder.
 
-MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1 og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er kun visualisering; routing og OSM-integrasjon er fortsatt ikke implementert.
+MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1 og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er kun visualisering og inngår ikke i routingkjernen; OSM-integrasjon er fortsatt ikke implementert.
 
 ---
 
@@ -481,6 +481,12 @@ A* vil sannsynligvis være naturlig når grafen blir større.
 
 Rutemotoren skal ikke kjenne brukergrensesnittet eller kartvisningen.
 
+Første routingkjerne er nå implementert i TypeScript og kjører i nettleseren, uavhengig av React og MapLibre. Den bruker A* på en eksplisitt graf med ordinære og virtuelle edges. Geografisk luftlinjeavstand brukes som admissible heuristikk under modellens krav om at `cost` aldri er lavere enn fysisk `distanceMeters`.
+
+En deterministisk testgraf beviser ordinær korteste rute, at en straffet virtuell edge kan velges bort, at en virtuell edge kan forbinde ellers adskilte nettverk, og at manglende rute returneres tydelig. Ekte OSM-data og kobling til rutepunktene i UI-et er ikke implementert.
+
+Via-punkter kan senere håndteres ved å beregne en delrute mellom hvert par av påfølgende rutepunkter og slå sammen edges, distanse og kostnad. Høydedata skal behandles separat etter at rutegeometrien er funnet. Beslutningen er dokumentert i [ADR-002: Routingarkitektur for første MVP](decisions/ADR-002-routingarkitektur.md).
+
 Den skal i prinsippet motta:
 
 ```text
@@ -504,7 +510,7 @@ metadata
 
 # 13. Overordnet arkitektur
 
-Diagrammet under illustrerer en mulig senere fysisk oppdeling med et API. Det er ikke besluttet om rutemotoren skal kjøre i nettleseren, i en backend eller på annen måte. De logiske grensene mellom presentasjon, dataintegrasjon og routingdomene gjelder uavhengig av valgt kjøremekanisme.
+Routingkjernen for første MVP kjører i nettleseren. Diagrammet under illustrerer en mulig senere fysisk oppdeling med et API dersom behov og datamengde tilsier det; det beskriver ikke dagens kjøremekanisme. De logiske grensene mellom presentasjon, dataintegrasjon og routingdomene gjelder uavhengig av en eventuell senere fysisk flytting.
 
 ```text
 ┌─────────────────────────────────────┐
@@ -743,7 +749,7 @@ ruteapp/
 
 Frontend skal ikke kjenne detaljene i rutemotoren.
 
-Eksemplet under viser en mulig framtidig kontrakt. Det fastsetter ikke at rutemotoren skal eksponeres som et REST-API eller kjøre i en backend; dette er fortsatt et åpent arkitekturspørsmål.
+Første MVP bruker routingkjernen direkte i nettleseren når UI-integrasjonen senere implementeres. Eksemplet under viser kun en mulig framtidig kontrakt dersom rutemotoren senere flyttes bak et API.
 
 Den skal eksempelvis kunne sende:
 

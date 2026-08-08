@@ -1,6 +1,5 @@
 import type { RoutePoint } from '../../types/routePoint'
-
-const EARTH_RADIUS_METERS = 6_371_008.8
+import { calculateGeographicDistanceMeters } from '../../utils/geographicDistance'
 
 export type RoutePointRole = {
   kind: 'start' | 'via' | 'end'
@@ -28,7 +27,7 @@ export function calculateRouteDistanceMeters(
   let totalDistance = 0
 
   for (let index = 1; index < routePoints.length; index += 1) {
-    totalDistance += calculateDistanceBetween(
+    totalDistance += calculateGeographicDistanceMeters(
       routePoints[index - 1],
       routePoints[index],
     )
@@ -46,27 +45,4 @@ export function formatDistance(distanceMeters: number) {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(distanceMeters / 1_000)} km`
-}
-
-function calculateDistanceBetween(from: RoutePoint, to: RoutePoint) {
-  const fromLatitude = degreesToRadians(from.latitude)
-  const toLatitude = degreesToRadians(to.latitude)
-  const latitudeDelta = toLatitude - fromLatitude
-  const longitudeDelta = degreesToRadians(to.longitude - from.longitude)
-
-  const haversine =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(fromLatitude) *
-      Math.cos(toLatitude) *
-      Math.sin(longitudeDelta / 2) ** 2
-
-  return (
-    2 *
-    EARTH_RADIUS_METERS *
-    Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
-  )
-}
-
-function degreesToRadians(degrees: number) {
-  return (degrees * Math.PI) / 180
 }

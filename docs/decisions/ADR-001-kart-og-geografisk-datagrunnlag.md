@@ -40,7 +40,7 @@ Kartinnhold deles konseptuelt i tre kategorier:
 2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første implementerte temalag er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i rutemodellen er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
 3. **Applikasjonsgenererte kartobjekter** omfatter blant annet punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. De kommer fra applikasjonens tilstand og beregninger og trenger ikke registreres som statiske eksterne kartlag.
 
-MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1, laget `Fotrute`, og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er visualisering, ikke routinggrunnlag. Routing og OSM-integrasjon er fortsatt ikke implementert.
+MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1, laget `Fotrute`, og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er visualisering, ikke routinggrunnlag. Routingkjernen er besluttet separat i ADR-002, og OSM-integrasjon er fortsatt ikke implementert.
 
 ### Routinggrunnlag
 
@@ -48,6 +48,7 @@ MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute hentes 
 - RuteApp skal bruke underliggende geografiske OSM-data, ikke ferdig renderte OSM-kartfliser, som routinggrunnlag.
 - Routinggrafen og rutemotoren skal være uavhengige av MapLibre og det visuelle bakgrunnskartet.
 - MapLibre skal visualisere ruteresultatet, men skal ikke eie rutelogikk.
+- Routingkjernen for første MVP skal kjøre i nettleseren, som besluttet i [ADR-002](ADR-002-routingarkitektur.md).
 
 Den første routing-MVP-en gjelder fottur: brukeren velger A og B, rutemotoren bruker ordinært sti- og veinett og tillatte virtuelle forbindelser, og den korteste egnede fotturruten vises i kartet. Ski- og sykkelruting er mulig framtidig utvikling og skal ikke føre til en generell fleraktivitetsmodell i første MVP.
 
@@ -111,7 +112,6 @@ Disse alternativene er ikke nødvendigvis permanent avvist, men de inngår ikke 
 
 ## Åpne spørsmål
 
-- Hvor skal rutemotoren kjøre?
 - Hvordan skal OSM-data importeres og prosesseres?
 - Hvordan skal den interne grafmodellen utformes konkret?
 - Hvordan skal virtuelle terrengforbindelser genereres?
