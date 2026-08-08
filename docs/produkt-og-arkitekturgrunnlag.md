@@ -197,34 +197,29 @@ Arkitekturen bør likevel ikke skape unødvendige hindringer for senere implemen
 
 # 7. Kart- og datakilder
 
-RuteApp bør skille mellom:
+RuteApp skal skille mellom:
 
 1. kartet brukeren ser
 2. data som brukes til ruteberegning
 3. supplerende geografiske data
 
-Dette trenger ikke være samme datakilde.
+Dette er separate ansvarsområder og skal ikke behandles som samme datagrunnlag. Beslutningen er dokumentert i [ADR-001: Skille mellom visuelt kartgrunnlag og routinggrunnlag](decisions/ADR-001-kart-og-geografisk-datagrunnlag.md).
 
 ---
 
-## 7.1 Kartverket
+## 7.1 Visuelt kartgrunnlag
 
-Kartverkets åpne topografiske kart er en naturlig kandidat som visuelt bakgrunnskart.
+MapLibre GL JS er valgt som kart- og presentasjonsmotor. Kartverkets toporaster/turkart skal brukes som primært visuelt bakgrunnskart i første versjon.
 
-Kartverket gir god norsk topografisk informasjon og et kartuttrykk som egner seg godt for ferdsel i naturen.
+Kartverket-kartet er et presentasjonsgrunnlag og skal ikke behandles som routingdata eller kilde til routingtopologi. Implementasjonen skal bruke en Kartverket-tjeneste som er egnet for MapLibre og Web Mercator (EPSG:3857). Gjeldende krav til kreditering og bruksvilkår skal ivaretas og kontrolleres på nytt før produksjonssetting.
 
-Kartverket kan senere også være kilde til blant annet:
-
-* høydedata
-* stedsnavn
-* terrenginformasjon
-* andre geografiske datasett
+MapLibre skal vise bakgrunnskart, geografiske objekter og beregnede ruter, men skal ikke eie rutelogikk.
 
 ---
 
-## 7.2 OpenStreetMap
+## 7.2 Routinggrunnlag
 
-OpenStreetMap, OSM, er et naturlig første grunnlag for rutegrafen.
+OpenStreetMap-rådata, OSM, er valgt som primær datakilde for etablering av routbart sti- og veinett i MVP-en. RuteApp skal bruke de underliggende geografiske OSM-dataene, ikke ferdig renderte OSM-kartfliser, som routinggrunnlag.
 
 OSM inneholder blant annet:
 
@@ -239,20 +234,28 @@ OSM inneholder blant annet:
 * underlag
 * ulike typer ferdselsnettverk
 
-OSM-data transformeres til en graf som rutemotoren kan arbeide på.
+OSM-data skal transformeres til en graf som rutemotoren kan arbeide på. Routinggrafen skal etableres uavhengig av MapLibre og det visuelle bakgrunnskartet.
+
+Konkret import-, prosesserings- og kjøremekanisme for OSM-data og rutemotor er foreløpig ikke besluttet.
 
 ---
 
 ## 7.3 Norske supplerende datasett
 
-Senere skal det vurderes om rutegrafen kan forbedres med blant annet:
+Routinggrunnlaget skal senere kunne berikes med norske offentlige data, blant annet:
 
+* høydedata
+* nasjonal høydemodell
+* N50/topografiske data
 * Kartverkets Turrutebase
+* andre tur- og friluftsruter
 * FKB-TraktorvegSti
-* nasjonale høydedata
 * relevante vann- og terrengdata
+* andre relevante barriere- og terrengdata
 
-OSM skal derfor ikke bygges inn som en antakelse om at dette alltid vil være eneste rutekilde.
+Disse kildene er ikke primært routinggrunnlag i første MVP. Høyde-, terreng- og barrieredata er særlig relevante for senere vurdering av virtuelle terrengforbindelser, for eksempel om en kort geometrisk forbindelse innebærer urimelig høydeforskjell eller andre terrengmessige problemer.
+
+OSM skal derfor ikke bygges inn som en antakelse om at dette alltid vil være eneste rutekilde. Konkrete regler for berikelse og vurdering av virtuelle forbindelser er fortsatt åpne.
 
 ---
 
@@ -467,6 +470,8 @@ metadata
 ---
 
 # 13. Overordnet arkitektur
+
+Diagrammet under illustrerer en mulig senere fysisk oppdeling med et API. Det er ikke besluttet om rutemotoren skal kjøre i nettleseren, i en backend eller på annen måte. De logiske grensene mellom presentasjon, dataintegrasjon og routingdomene gjelder uavhengig av valgt kjøremekanisme.
 
 ```text
 ┌─────────────────────────────────────┐
@@ -704,6 +709,8 @@ ruteapp/
 # 17. API-prinsipp
 
 Frontend skal ikke kjenne detaljene i rutemotoren.
+
+Eksemplet under viser en mulig framtidig kontrakt. Det fastsetter ikke at rutemotoren skal eksponeres som et REST-API eller kjøre i en backend; dette er fortsatt et åpent arkitekturspørsmål.
 
 Den skal eksempelvis kunne sende:
 

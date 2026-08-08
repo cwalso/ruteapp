@@ -26,6 +26,12 @@ Det er foreløpig ikke implementert produksjonsklar routingfunksjonalitet.
 
 MapLibre er foreløpig ikke integrert.
 
+## Besluttet kart- og datagrunnlag
+
+MapLibre GL JS er valgt som presentasjonsmotor, og Kartverkets toporaster/turkart er planlagt som primært visuelt bakgrunnskart. OpenStreetMap-rådata er valgt som planlagt primært grunnlag for det routbare sti- og veinettet; renderte kartfliser skal ikke brukes som routingdata.
+
+Kartverkets høyde-, terreng- og friluftsdata kan senere berike routinggrunnlaget og vurderingen av virtuelle terrengforbindelser. MapLibre, Kartverket-integrasjonen, OSM-import, rutegraf og rutemotor er foreløpig ikke implementert. Skillet mellom visuelt kartgrunnlag og routinggrunnlag er dokumentert i [ADR-001](decisions/ADR-001-kart-og-geografisk-datagrunnlag.md).
+
 ## Repositorystruktur
 
 ### `/src`
@@ -62,7 +68,7 @@ Ruteberegningsalgoritmer skal ikke ligge her.
 
 ### `/src/routing`
 
-Domenelogikk for ruteberegning.
+Reservert for routingrelatert domenelogikk i den nåværende prosjektstrukturen.
 
 Forventede ansvarsområder:
 
@@ -74,6 +80,8 @@ virtuelle terrengforbindelser
 routingrelaterte domeneregler
 
 Routinglogikken skal så langt som mulig kunne brukes og testes uavhengig av React-komponentene.
+
+Denne logiske ansvarsgrensen avgjør ikke hvor den endelige rutemotoren skal kjøre. Valget mellom nettleser, backend eller en annen kjøremekanisme er fortsatt åpent.
 
 ### `/src/services`
 
@@ -142,6 +150,8 @@ UI-komponenter skal vise informasjon og samle inn brukerhandlinger.
 Kartmodulen skal vise og håndtere geografisk informasjon.
 
 Routingmodulen skal håndtere forbindelser og beregne ruter.
+
+Dette beskriver en logisk modulgrense, ikke en besluttet fysisk plassering av rutemotoren.
 
 Tjenestelaget skal hente og eventuelt transformere eksterne data.
 
