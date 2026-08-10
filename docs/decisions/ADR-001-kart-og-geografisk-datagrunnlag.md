@@ -9,6 +9,8 @@ RuteApp trenger både et topografisk kart som brukeren kan orientere seg i, og g
 
 Et rendret bakgrunnskart viser geografi, men er ikke i seg selv et egnet grunnlag for å etablere routingtopologi. Samtidig skal kartpresentasjonen ikke kobles til hvordan rutegrafen bygges eller hvor rutemotoren kjører.
 
+Implementasjonsopplysninger nedenfor beskriver beslutningskonteksten. Gjeldende implementasjonsstatus vedlikeholdes i `docs/code-context.md`, produkt- og arkitekturgrunnlaget og relevante arkitekturdokumenter.
+
 ## Beslutning
 
 RuteApp skal skille tydelig mellom visuelt kartgrunnlag og routbart geografisk datagrunnlag.
@@ -24,13 +26,9 @@ RuteApp skal skille tydelig mellom visuelt kartgrunnlag og routbart geografisk d
 - Nerskogen brukes som standard utviklings- og testutsnitt.
 - Gjeldende krav til kreditering og bruksvilkår skal ivaretas. Vilkårene skal kontrolleres på nytt før produksjonssetting.
 
-Kartverket har varslet at et nytt topografisk bakgrunnskart skal bli tilgjengelig som WMS/WMTS-tjeneste i løpet av august 2026. Eksisterende `toporaster` brukes inntil en ny tjeneste faktisk er publisert og vurdert; denne beslutningen antar ikke URL eller tjenestenavn for den varslede tjenesten.
+På beslutningstidspunktet hadde Kartverket varslet et nytt topografisk bakgrunnskart som WMS/WMTS-tjeneste. Eksisterende `toporaster` ble derfor beholdt inntil en ny tjeneste kunne publiseres og vurderes; denne beslutningen antar ikke URL eller tjenestenavn for en framtidig tjeneste.
 
 Kartverket toporaster beholdes som konfigurert bakgrunnsalternativ i profilen Kartverket Turkart, og Kartverkets Turrutebase – Fotrute er første aktive temalag. Arkitekturen skal senere kunne støtte flere sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Konkrete datakilder for disse framtidige lagene er ikke besluttet.
-
-Som en kartografisk spike testes også profilen RuteApp Sommer. Den bruker OpenFreeMap Positron som vektorbasert bakgrunn, en subtil 2D-hillshade fra Mapterhorn og separate visningslag for `class=path` og `class=track` fra OpenMapTiles-laget `transportation`. Kartverket Turkart beholdes som alternativ, og en enkel profilvelger gjør profilene sammenlignbare under utvikling. RuteApp Sommer er midlertidig standard i spiken.
-
-OpenFreeMap, Mapterhorn og den konkrete kartografien er ikke akseptert som permanente leverandør- eller designvalg gjennom denne ADR-en. De fremhevede OpenMapTiles-lagene er kun visningsdata; de er ikke egen OSM-import, rutegraf eller routinggrunnlag og endrer ikke beslutningen om OSM-rådata som planlagt routinggrunnlag.
 
 ### Kartlagmodell
 
@@ -40,7 +38,7 @@ Kartinnhold deles konseptuelt i tre kategorier:
 2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første implementerte temalag er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i rutemodellen er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
 3. **Applikasjonsgenererte kartobjekter** omfatter blant annet punkt A og B, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. De kommer fra applikasjonens tilstand og beregninger og trenger ikke registreres som statiske eksterne kartlag.
 
-MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1, laget `Fotrute`, og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er visualisering, ikke routinggrunnlag. Routingkjernen er besluttet separat i ADR-002, og OSM-integrasjon er fortsatt ikke implementert.
+MapLibre presenterer innholdet, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1, laget `Fotrute`, og vises som transparent raster i Web Mercator over relevante bakgrunnsprofiler. Dette er visualisering, ikke routinggrunnlag. Routingkjernen er besluttet separat i [ADR-002](ADR-002-routingarkitektur.md). Presentasjonen av RuteApps eget rutbare nett er presisert i [ADR-003](ADR-003-routing-aware-cartography.md).
 
 ### Routinggrunnlag
 
@@ -98,7 +96,6 @@ En separat routingmodell bevarer også muligheten til å supplere OSM med andre 
 - Applikasjonsgenererte kartobjekter skal holdes konseptuelt atskilt fra eksterne bakgrunnslag og tematiske lag.
 - At Fotrute vises som tematisk lag, innebærer ikke at datasettet automatisk inngår i rutegrafen eller påvirker rutekostnad.
 - Kartprofiler kan kombinere ulike base-stiler og presentasjonslag uten å endre routingarkitekturen.
-- Terrengskygge og fremhevede sti-/traktorveilag i RuteApp Sommer er eksperimentell kartografi og må evalueres før et permanent valg tas.
 - Virtuelle terrengforbindelser må forbli eksplisitte forbindelser i routingmodellen, også når de senere vurderes ved hjelp av supplerende data.
 
 ## Alternativer som foreløpig ikke er valgt
@@ -112,9 +109,7 @@ Disse alternativene er ikke nødvendigvis permanent avvist, men de inngår ikke 
 
 ## Åpne spørsmål
 
-- Hvordan skal OSM-data importeres og prosesseres?
-- Hvordan skal den interne grafmodellen utformes konkret?
-- Hvordan skal virtuelle terrengforbindelser genereres?
+- Hvordan skal OSM-import og preprocessing skaleres utover det avgrensede Nerskogen-datasettet?
+- Hvordan skal generering og validering av virtuelle terrengforbindelser videreutvikles?
 - Hvilke terreng- og barriereregler skal senere gjelde?
 - Skal Fotrute senere berike routinggrunnlaget eller påvirke rutekostnad, og i så fall hvordan?
-- Hvilken kartprofil, leverandør og kartografi skal velges etter evaluering av spiken?

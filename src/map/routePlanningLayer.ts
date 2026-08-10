@@ -13,10 +13,10 @@ const routeLineLayer = {
     'line-join': 'round',
   },
   paint: {
-    'line-color': '#174f7a',
-    'line-dasharray': [2, 1.2],
-    'line-opacity': 0.82,
-    'line-width': 3,
+    'line-color': '#405c68',
+    'line-dasharray': [0.5, 2.5],
+    'line-opacity': 0.55,
+    'line-width': 1.5,
   },
 } satisfies LayerSpecification
 
@@ -24,6 +24,15 @@ export function syncRoutePlanningLine(
   map: Map,
   routePoints: readonly RoutePoint[],
 ) {
+  const source = map.getSource(ROUTE_LINE_SOURCE_ID) as
+    | GeoJSONSource
+    | undefined
+
+  if (source) {
+    source.setData(createRouteLineData(routePoints))
+    return
+  }
+
   if (!map.isStyleLoaded()) {
     return
   }

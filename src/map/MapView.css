@@ -10,29 +10,172 @@
   top: 0.75rem;
   left: 0.75rem;
   display: grid;
-  gap: 0.25rem;
-  min-width: 10.5rem;
-  padding: 0.55rem 0.65rem 0.65rem;
+  gap: 0.15rem;
+  min-width: 9.25rem;
+  padding: 0.4rem 0.5rem 0.5rem;
   border: 1px solid rgb(33 76 59 / 20%);
   border-radius: 0.45rem;
   background: rgb(255 255 255 / 94%);
-  box-shadow: 0 1px 5px rgb(24 40 33 / 16%);
+  box-shadow: 0 1px 3px rgb(24 40 33 / 12%);
 }
 
 .map-profile-control span {
   color: #52615a;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .map-profile-control select {
-  min-height: 2.25rem;
+  min-height: 1.95rem;
+  padding: 0 0.35rem;
   border: 1px solid #bac5c0;
   border-radius: 0.35rem;
   color: #17251f;
   background: #ffffff;
+}
+
+.shortcut-debug-control {
+  position: absolute;
+  z-index: 1;
+  top: 5.15rem;
+  left: 0.75rem;
+  display: grid;
+  width: min(17rem, calc(100% - 1.5rem));
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border: 1px solid rgb(153 91 0 / 35%);
+  border-radius: 0.45rem;
+  background: rgb(255 252 245 / 95%);
+  box-shadow: 0 1px 3px rgb(55 36 8 / 14%);
+}
+
+.shortcut-debug-control legend {
+  padding: 0 0.2rem;
+  color: #80520c;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.shortcut-debug-control label:not(.shortcut-debug-toggle) {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b4030;
+  font-size: 0.75rem;
+}
+
+.shortcut-debug-control select,
+.shortcut-debug-control input[type='number'],
+.shortcut-debug-control input[type='text'] {
+  width: 100%;
+  min-height: 1.8rem;
+  border: 1px solid #cdbb9f;
+  border-radius: 0.3rem;
+  background: #ffffff;
+}
+
+.shortcut-debug-search {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.shortcut-debug-search > label {
+  color: #4b4030;
+  font-size: 0.75rem;
+}
+
+.shortcut-debug-search > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem;
+}
+
+.shortcut-debug-search input {
+  min-width: 0;
+  padding: 0 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-transform: uppercase;
+}
+
+.shortcut-debug-navigation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.shortcut-debug-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #332b20;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.shortcut-debug-control button {
+  min-height: 2rem;
+  border: 1px solid #b97817;
+  border-radius: 0.35rem;
+  color: #593807;
+  background: #fff7e7;
+  cursor: pointer;
+}
+
+.shortcut-debug-control button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.shortcut-debug-control small {
+  color: #6a5a43;
+  font-size: 0.68rem;
+}
+
+.shortcut-debug-message {
+  color: #a1271f !important;
+  font-weight: 700;
+}
+
+.shortcut-debug-selection {
+  color: #80520c !important;
+  font-weight: 700;
+}
+
+.same-component-shortcut-popup dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.2rem 0.65rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+}
+
+.same-component-shortcut-popup dt {
+  color: #6a5a43;
+}
+
+.same-component-shortcut-popup dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .map-profile-control {
+    top: 0.55rem;
+    left: 0.55rem;
+    min-width: 8.75rem;
+  }
+
+  .shortcut-debug-control {
+    top: 4.9rem;
+    left: 0.55rem;
+    width: min(16rem, calc(100% - 1.1rem));
+  }
 }
 
 .route-marker {

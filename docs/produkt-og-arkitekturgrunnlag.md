@@ -99,6 +99,18 @@ Arkitekturen skal ikke knytte kjernelogikken til nettleseren. Dette gjør det mu
 
 ---
 
+## 3.5 Routing-aware cartography
+
+RuteApp skal ha én funksjonell sannhet for nettet som produktet selv presenterer som rutbart:
+
+> Rutbare lineære objekter som vises som RuteApps eget sti-/veinett, skal avledes fra samme normaliserte datagrunnlag som brukes til snapping og ruteberegning.
+
+Routinggrafens directed edges og kartets fysiske presentasjonssegmenter er separate modeller. Kartmodellen skal deduplisere samme fysiske segment og skal ikke fremstille virtuelle terrengforbindelser som registrerte stier. Terreng- og orienteringsinformasjon som høydekurver, topper, vann, myr, navn og bygninger kan fortsatt komme fra et uavhengig bakgrunnskart.
+
+Prinsippet er en akseptert arkitekturbeslutning dokumentert i [ADR-003: Routing-aware cartography](decisions/ADR-003-routing-aware-cartography.md).
+
+---
+
 # 4. MVP 1
 
 Første MVP skal være bevisst liten.
@@ -131,7 +143,13 @@ Før rutemotoren etableres, støtter applikasjonen interaktiv planlegging med en
 
 Punkter kan dras, fjernes enkeltvis med høyreklikk og tømmes samlet. Roller og nummerering utledes på nytt etter hver endring. React-featurelaget eier punktlisten; MapLibre viser markører og rapporterer interaksjoner tilbake.
 
-Når minst to punkt finnes, viser kartet en app-generert GeoJSON-linje gjennom punktene. Samlet foreløpig avstand beregnes on the fly som summen av geografisk storcirkelavstand mellom påfølgende punkt. Linjen og avstanden representerer direkte planleggingsgeometri, ikke en beregnet fotturrute på sti- og veinett. Faktisk routing og høydeprofil implementeres i senere steg.
+Når minst to punkt finnes, viser kartet en svak, prikket app-generert GeoJSON-hjelpelinje gjennom punktene. Samlet direkte avstand beregnes on the fly som summen av geografisk storcirkelavstand mellom påfølgende punkt. Hjelpelinjen og avstanden representerer direkte geometri, ikke en beregnet rute. Hjelpelinjen er synlig som standard i development mode og skjules i produksjon når en gyldig beregnet rute finnes.
+
+Rutepunktene er nå koblet til det statiske Nerskogen-datasettet. Punkt innenfor datasettgrensen snappes til nærmeste punkt på en ordinær routing-edge når dette ligger maksimalt 100 meter unna. Brukerens opprinnelige koordinat og kartmarkør beholdes, mens snapped koordinat inngår i rutegeometrien. A* beregner en delrute for hvert påfølgende punktpar, og delrutene slås sammen til én rute med faktisk lengde langs routinggrafens edges. Den beregnede ruten er visuelt primær over hjelpelinjen. Ordinære rutesegmenter vises heltrukket, mens virtuelle terrengforbindelser vises lilla og stiplet. Endring, flytting eller fjerning av punkt beregner resultatet på nytt umiddelbart.
+
+Etter vellykket routing samples den faktiske rutegeometrien, inkludert via-punkter og virtuelle segmenter, og høyder hentes gjennom en separat adapter mot Kartverkets Høydedata-API. Panelet viser en enkel høydeprofil, samlet stigning/fall og estimert gangtid. Dette er etterprosessering og presentasjon: høydedataene endrer ikke rutevalget eller routingkostnaden. Gangtiden er et statisk, generelt planleggingsestimat og ikke personlig hastighet eller live ETA.
+
+Kartet er den primære arbeidsflaten. På desktop vises ruteinformasjonen i et smalt sidepanel; på mobil ligger et enkelt panel under kartet. Ruteoversikten prioriterer rutelengde, estimert tid, stigning, fall og høydeprofil før den kompakte listen over A, B og eventuelle mellompunkter. Direkte avstand og utviklingsdiagnostikk er sekundær informasjon. Virtuelle terrengforbindelser skal oppsummeres tydelig, men nøkternt, og skilles fra ordinære rutedeler uten å framstå som en garanti for farbarhet eller sikker ferdsel. Videre kartografisk utforming og evaluering av kartprofilene er et eget senere steg.
 
 ---
 
@@ -166,6 +184,8 @@ Resultatet skal minimum vise:
 * distanse på registrert nettverk
 * distanse via virtuelle terrengforbindelser
 * antall virtuelle forbindelser
+* høydeprofil og samlet stigning/fall
+* et enkelt estimat for gangtid
 
 Registrerte og virtuelle deler av ruten skal visuelt kunne skilles fra hverandre.
 
@@ -196,7 +216,7 @@ Følgende skal ikke være nødvendig for første MVP:
 * offline-ruting
 * kontinuerlig GPS-navigasjon
 * automatisk omruting
-* ETA
+* løpende ETA basert på faktisk fremdrift
 * personlig ganghastighet
 * høydemeter som rutekriterium
 * avansert terrenganalyse
@@ -232,11 +252,17 @@ Kartverket toporaster er det første implementerte bakgrunnskartet og beholdes s
 
 Kartarkitekturen skal senere kunne kombinere bakgrunnskart med flere sommerstier og fotturruter, vinter- og skiløyper, sykkelruter, høyde- og terrenglag og andre relevante temalag. Fotrute er første implementerte temalag; konkrete datakilder for de øvrige framtidige lagene er ikke besluttet. Synlige temalag og routingdata er separate arkitekturbegreper; et lag brukeren ser, er ikke automatisk samme datasett eller representasjon som rutemotoren bruker.
 
-### Kartografisk spike: RuteApp Sommer
+### Kartografisk profilstudie
 
-En eksperimentell vektorbasert kartprofil, RuteApp Sommer, testes med OpenFreeMap Positron som dempet bakgrunn. Profilen kombinerer bakgrunnen med subtil 2D-hillshade fra Mapterhorn og egne visningslag for `class=path` og `class=track` fra OpenMapTiles-laget `transportation`. Dette gjør stier og traktorveier tydeligere uten å gjøre vanlige veier mer fremtredende. Fotrute vises fortsatt som eget tematisk lag over profilen.
+Kartverket Turkart (`toporaster`) beholdes som standard og referanse. To avgrensede utviklingsprofiler gjør det mulig å sammenligne Kartverkets skjermtilpassede fargekart (`topo`) og gråtonekart (`topograatone`) med samme Fotrute-lag og de samme applikasjonsgenererte objektene. Profilene er presentasjonsvalg og endrer ikke routing, høydedata eller vurderingen av virtuelle forbindelser.
 
-Kartverket toporaster beholdes som den alternative profilen Kartverket Turkart. En enkel profilvelger brukes kun for sammenligning under utvikling, med RuteApp Sommer som midlertidig standard i spiken. OpenFreeMap, Mapterhorn og den konkrete kartografien er ikke endelig valgte leverandører eller permanent kartdesign. Vektortilenes synlige sti- og traktorveidata er presentasjonsdata og endrer ikke beslutningen om separate OSM-rådata som framtidig routinggrunnlag.
+Den tidligere OpenFreeMap-/Mapterhorn-baserte profilen RuteApp Sommer er fjernet. Studien fant ikke tilstrekkelig kartografisk gevinst til å beholde den ekstra leverandør- og lagstakken. Turkart anbefales fortsatt som primær profil fordi kritisk turinformasjon er tydeligst. Kartverket Topo er den sterkeste videre kandidaten for et roligere skjermkart og skal valideres bredere før et eventuelt bytte. Gråtoneprofilen gir sterk rutekontrast, men svekker den raske visuelle tolkningen av vann, myr og vegetasjon. Full sammenligning, tjenestegrunnlag og anbefaling er dokumentert i [Kartografisk profilstudie](architecture/cartographic-profile-study.md).
+
+### Routing-aware cartography
+
+Development-profilen RuteApp Routing bruker Kartverket Topo som midlertidig terrengbakgrunn og tegner RuteApps eget `path`/`track`/`road`-nett fra det normaliserte Nerskogen-datasettet. Motsatt rettede edges dedupliseres til fysiske kartsegmenter, mens virtuelle edges holdes utenfor basiskartet. Fotrute er slått av i denne profilen fordi laget kan vise registrerte ruter som ikke finnes i routinggrafen.
+
+Den gjennomførte spiken demonstrerer samsvar mellom RuteApps synlige nett, snapping og A*. Prinsippet er akseptert i [ADR-003: Routing-aware cartography](decisions/ADR-003-routing-aware-cartography.md). Kartverkets rasterbakgrunn har fortsatt egne stier og veier bakt inn; dette er den viktigste gjenværende visuelle begrensningen. Implementasjon og måleresultater er dokumentert i [Routing-aware cartography](architecture/routing-aware-cartography.md).
 
 ---
 
@@ -259,7 +285,11 @@ OSM inneholder blant annet:
 
 OSM-data skal transformeres til en graf som rutemotoren kan arbeide på. Routinggrafen skal etableres uavhengig av MapLibre og det visuelle bakgrunnskartet.
 
-Routingkjernen for første MVP kjører i nettleseren. Konkret import- og preprocessingmekanisme for OSM-data er fortsatt ikke besluttet.
+Første OSM-preprocessing er implementert for en avgrenset bbox rundt Nerskogen. Overpass brukes kun som utviklingsverktøy for å hente rådata. Et separat script filtrerer et konservativt sommer-/fotturutvalg, splitter ways mellom påfølgende OSM-noder og genererer et kompakt statisk RuteApp-datasett. Nettleseren skal senere laste den genererte filen og skal ikke kontakte Overpass ved vanlig bruk.
+
+Første import inkluderer `path`, `footway`, `pedestrian`, `steps`, `track`, `service`, `unclassified`, `residential` og `living_street`. Eksplisitt `foot=no`/`private` avvises, og generell `access=no`/`private` avvises dersom den ikke overstyres av eksplisitt tillatt fotgjengeradgang. Vanlige segmenter opprettes begge veier; enkel `oneway:foot` støttes. Detaljene er dokumentert i [OSM-import for routing](architecture/osm-routing-import.md).
+
+Det visuelle Norgeskart-grunnlaget og OSM-routingdatasettet kan inneholde forskjellige stier og ulik topologi. Edge-snapping kobler brukerpunktet mer presist til de OSM-edgene som faktisk finnes, men skal ikke konstruere en sti som bare er synlig i bakgrunnskartet. Slike datagap skal diagnostiseres. En identifisert eksisterende ferdselsåre hører til senere databerikelse eller import, mens den første virtual-edge-regelen bare kan foreslå en eksplisitt, geometrisk terrengforbindelse mellom ulike ordinære komponenter.
 
 ---
 
@@ -276,19 +306,20 @@ Routinggrunnlaget skal senere kunne berikes med norske offentlige data, blant an
 * relevante vann- og terrengdata
 * andre relevante barriere- og terrengdata
 
-Disse kildene er ikke primært routinggrunnlag i første MVP. Høyde-, terreng- og barrieredata er særlig relevante for senere vurdering av virtuelle terrengforbindelser, for eksempel om en kort geometrisk forbindelse innebærer urimelig høydeforskjell eller andre terrengmessige problemer.
+Disse kildene er ikke primært routinggrunnlag i første MVP. Kartverkets høyder brukes nå til profil og generell tidsberegning etter at ruten er valgt, men påvirker ikke routinggraf eller kostnad. Høyde-, terreng- og barrieredata er særlig relevante for senere vurdering av virtuelle terrengforbindelser, for eksempel om en kort geometrisk forbindelse innebærer urimelig høydeforskjell eller andre terrengmessige problemer.
 
-OSM skal derfor ikke bygges inn som en antakelse om at dette alltid vil være eneste rutekilde. Konkrete regler for berikelse og vurdering av virtuelle forbindelser er fortsatt åpne.
+OSM skal derfor ikke bygges inn som en antakelse om at dette alltid vil være eneste rutekilde. Konkrete regler for berikelse og moden vurdering av virtuelle forbindelser er fortsatt åpne; den første implementerte avstandsregelen er bare en begrenset prototype.
 
 ## 7.4 Kartlagmodell
 
-Kartinnhold skal forstås i tre kategorier:
+Kartinnhold skal forstås i fire kategorier:
 
 1. **Bakgrunnslag** gir visuell kontekst. Kartverket toporaster er første implementerte bakgrunnslag og brukes ikke som routingdata.
 2. **Tematiske lag** viser eksterne fagdata oppå et bakgrunnslag. Første implementerte temalag er Kartverkets Turrutebase – Fotrute. Fotrute beskriver registrerte fotturruter, ikke alle ordinære stier i terrenget. Laget kan senere vurderes som berikelse eller kvalitetssignal for routing, men visualisering og eventuell bruk i routing er separate roller. Det er ikke besluttet om eller hvordan Fotrute skal påvirke rutekostnad.
-3. **Applikasjonsgenererte kartobjekter** omfatter blant annet rutepunkter, foreløpige planleggingslinjer, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. Rutepunkter og den foreløpige linjen er nå implementert som dynamisk kartpresentasjon fra React-featurets state og inngår ikke i det statiske kartlagregisteret for eksterne kilder.
+3. **RuteApps rutbare nett** er fysiske `path`/`track`/`road`-segmenter avledet fra samme normaliserte grunnlag som snapping og routing. Det er en kartpresentasjon av rutbar geometri, ikke en kopi av directed edges eller en separat rutekilde.
+4. **Applikasjonsgenererte kartobjekter** omfatter blant annet rutepunkter, foreløpige planleggingslinjer, beregnede ruter, virtuelle forbindelser, markører og analyseresultater. Rutepunkter og den foreløpige linjen er nå implementert som dynamisk kartpresentasjon fra React-featurets state og inngår ikke i det statiske kartlagregisteret for eksterne kilder.
 
-MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1 og vises som transparent raster i Web Mercator over begge kartprofilene. Dette er kun visualisering og inngår ikke i routingkjernen; OSM-integrasjon er fortsatt ikke implementert.
+MapLibre presenterer innholdet i disse kategoriene, men skal ikke eie routinglogikk. Fotrute hentes fra Kartverkets Turrutebase WMS (`https://wms.geonorge.no/skwms1/wms.friluftsruter2`) med WMS 1.1.1 og vises som transparent raster i Web Mercator over de tre Kartverket-profilene. Dette er kun visualisering og inngår ikke i routingkjernen. Den separate OSM-integrasjonen bruker det preprocesserte, statiske Nerskogen-datasettet.
 
 ---
 
@@ -327,15 +358,20 @@ Hver kant bør minimum inneholde:
 
 ```text
 id
-fromNode
-toNode
-geometry
+fromNodeId
+toNodeId
 distanceMeters
-type
-source
+edgeType
+cost
 ```
 
 For virtuelle forbindelser kommer ytterligere metadata.
+
+Det første genererte datasettet bruker OSM-noder som `RoutingNode` og oppretter rettede edges mellom hvert par av påfølgende noder i en inkludert way. `distanceMeters` beregnes geografisk mellom endepunktene og `cost` settes lik distansen. Datasetadapteren bygger den samme interne `RoutingGraph` som de deterministiske testgrafene bruker. OSM-topologien beholdes uendret; separate komponenter kobles ikke sammen i dette steget.
+
+Nettleseren laster det genererte Nerskogen-datasettet fra `/data/routing/nerskogen.json`, validerer runtime-formatet og bygger grafen én gang per sesjon. Rutepunkt utenfor bbox-en, punkt uten routing-edge innenfor maksimal snap-avstand og punktpar uten sammenhengende rute gir separate, eksplisitte statuser. Det beregnes ingen delvis rute dersom ett av via-segmentene feiler.
+
+Når et punkt snapper til midten av en edge, opprettes en midlertidig node i en avledet graf for den aktuelle ruteberegningen. Berørte rettede edges splittes proporsjonalt med bevart retning, fysisk lengde, kostnad og edge-type. Den cachede grafen modifiseres ikke. Flere A/B/via-punkter på samme edge behandles i stabil rekkefølge. Routingresultatet beholder originalt punkt, snapped koordinat, snap-avstand, valgt edge og en oppsummering av edge-typene i ruten som utviklingsdiagnostikk.
 
 ---
 
@@ -392,16 +428,19 @@ Punktet `×` blir da et nytt logisk knutepunkt i rutegrafen.
 
 ## 9.3 Første implementasjon
 
-MVP kan starte enkelt:
+Den første implementasjonen er en enkel topologi- og avstandsbasert prototype:
 
-1. finn frie stiendepunkter
-2. søk etter nærmeste relevante nettverk innenfor maksimal avstand
-3. opprett rett geometrisk forbindelse
-4. merk forbindelsen som virtuell
-5. legg forbindelsen inn i rutegrafen
-6. la rutemotoren vurdere forbindelsen
+1. finn svakt sammenhengende komponenter i det ordinære routingnettet
+2. søk edge-til-edge mellom ulike komponenter innenfor maksimalt 200 meter
+3. behold én deterministisk korteste kandidat per komponentpar
+4. opprett nødvendige logiske koblingspunkter ved å splitte ordinære edges i en avledet graf
+5. opprett rett geometrisk forbindelse begge veier med `edgeType = virtual`
+6. sett fysisk distanse til luftlinjen og `cost` til distansen multiplisert med 3,0
+7. la den uendrede A*-motoren vurdere forbindelsen etter samlet kostnad
 
-Dette gjør det mulig å teste kjerneideen tidlig.
+Originalgrafen og OSM-datasettet muteres ikke. Kandidatgenereringen skjer én gang ved innlasting og er separat fra OSM-importen, rutemotoren, kartpresentasjonen og React. A/B/via-punkter snapper fortsatt bare til ordinære edges.
+
+Prototypen vurderer ikke vann, myr, høyde, helning, bygninger, gjerder, eiendom, adgang, andre barrierer eller sikker ferdsel. Den kan derfor ikke bekrefte at en kandidat er fysisk farbar eller anbefalt. Foreløpig genereres bare forbindelser mellom ulike ordinære komponenter; urimelige omveier innenfor samme komponent utløser ikke en virtuell snarvei. En kjent eksisterende FKB-sti eller annen identifisert ferdselsåre skal behandles som databerikelse/import og aldri maskeres som en virtuell forbindelse. Detaljene er dokumentert i [Virtuelle terrengforbindelser – første MVP](architecture/virtual-terrain-connections.md).
 
 ---
 
@@ -483,9 +522,9 @@ Rutemotoren skal ikke kjenne brukergrensesnittet eller kartvisningen.
 
 Første routingkjerne er nå implementert i TypeScript og kjører i nettleseren, uavhengig av React og MapLibre. Den bruker A* på en eksplisitt graf med ordinære og virtuelle edges. Geografisk luftlinjeavstand brukes som admissible heuristikk under modellens krav om at `cost` aldri er lavere enn fysisk `distanceMeters`.
 
-En deterministisk testgraf beviser ordinær korteste rute, at en straffet virtuell edge kan velges bort, at en virtuell edge kan forbinde ellers adskilte nettverk, og at manglende rute returneres tydelig. Ekte OSM-data og kobling til rutepunktene i UI-et er ikke implementert.
+En deterministisk testgraf beviser ordinær korteste rute, at en straffet virtuell edge kan velges bort, at en virtuell edge kan forbinde ellers adskilte nettverk, og at manglende rute returneres tydelig. I tillegg verifiseres A* mot det genererte OSM-datasettet for Nerskogen med en automatisk valgt fler-edge-rute.
 
-Via-punkter kan senere håndteres ved å beregne en delrute mellom hvert par av påfølgende rutepunkter og slå sammen edges, distanse og kostnad. Høydedata skal behandles separat etter at rutegeometrien er funnet. Beslutningen er dokumentert i [ADR-002: Routingarkitektur for første MVP](decisions/ADR-002-routingarkitektur.md).
+UI-integrasjonen bruker samme routingkjerne. Via-punkter håndteres ved å beregne en delrute mellom hvert par av påfølgende rutepunkter og slå sammen nodesekvens, edges, distanse og kostnad uten duplikat i skjøten. Rutegeometrien starter og slutter ved de faktiske snapped koordinatene på routingnettet. Ordinære rutesegmenter er heltrukne, virtuelle segmenter er lilla og stiplede, og begge ligger visuelt over den svake, prikkede hjelpelinjen for direktegeometri. Lagene reetableres ved stilbytte. Resultatet oppgir eksplisitt antall virtuelle edges og samlet virtuell distanse. Høydedata behandles separat etter at rutegeometrien er funnet, og brukes nå til profil, stigning/fall og et enkelt gangtidsestimat som beskrevet i [Høydeprofil og estimert gangtid](architecture/elevation-and-walking-time.md). Beslutningen er dokumentert i [ADR-002: Routingarkitektur for første MVP](decisions/ADR-002-routingarkitektur.md).
 
 Den skal i prinsippet motta:
 

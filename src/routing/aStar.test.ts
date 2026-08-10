@@ -65,6 +65,37 @@ describe('findRoute', () => {
     expect(result?.totalCost).toBe(270)
   })
 
+  it('uses a penalized virtual edge when it is cheaper than a large ordinary detour', () => {
+    const graph = createRoutingGraph(Object.values(nodes), [
+      edge('a-d', 'a', 'd', 300, 'road'),
+      edge('d-c', 'd', 'c', 300, 'road'),
+      edge('a-c-virtual', 'a', 'c', 105, 'virtual', 315),
+    ])
+
+    const result = findRoute(graph, 'a', 'c')
+
+    expect(result?.edges.map(({ id }) => id)).toEqual(['a-c-virtual'])
+    expect(result?.totalDistanceMeters).toBe(105)
+    expect(result?.totalCost).toBe(315)
+  })
+
+  it('chooses the lowest total cost when several virtual alternatives exist', () => {
+    const graph = createRoutingGraph(Object.values(nodes), [
+      edge('a-b', 'a', 'b', 60, 'path'),
+      edge('b-c-virtual', 'b', 'c', 60, 'virtual', 180),
+      edge('a-d', 'a', 'd', 90, 'road'),
+      edge('d-c-virtual', 'd', 'c', 30, 'virtual', 90),
+    ])
+
+    const result = findRoute(graph, 'a', 'c')
+
+    expect(result?.edges.map(({ id }) => id)).toEqual([
+      'a-d',
+      'd-c-virtual',
+    ])
+    expect(result?.totalCost).toBe(180)
+  })
+
   it('returns null when the target cannot be reached', () => {
     const graph = createRoutingGraph(Object.values(nodes), [
       edge('a-b', 'a', 'b', 60, 'path'),

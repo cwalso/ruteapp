@@ -5,6 +5,9 @@ type MapSource = MapStyle['sources'][string]
 type MapLayer = MapStyle['layers'][number]
 
 const KARTVERKET_ATTRIBUTION = '© Kartverket'
+const KARTVERKET_WMTS_BASE_URL =
+  'https://cache.kartverket.no/v1/wmts/1.0.0'
+const KARTVERKET_WMTS_MAX_ZOOM = 18
 
 export type MapLayerCategory = 'background' | 'thematic'
 
@@ -26,9 +29,10 @@ export const kartverketToporaster = {
     definition: {
       type: 'raster',
       tiles: [
-        'https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/{z}/{y}/{x}.png',
+        `${KARTVERKET_WMTS_BASE_URL}/toporaster/default/webmercator/{z}/{y}/{x}.png`,
       ],
       tileSize: 256,
+      maxzoom: KARTVERKET_WMTS_MAX_ZOOM,
       attribution: KARTVERKET_ATTRIBUTION,
     },
   },
@@ -36,6 +40,50 @@ export const kartverketToporaster = {
     id: 'kartverket-toporaster',
     type: 'raster',
     source: 'kartverket-toporaster-source',
+  },
+} satisfies MapLayerConfig
+
+export const kartverketTopo = {
+  name: 'Kartverket Topografisk norgeskart',
+  category: 'background',
+  source: {
+    id: 'kartverket-topo-source',
+    definition: {
+      type: 'raster',
+      tiles: [
+        `${KARTVERKET_WMTS_BASE_URL}/topo/default/webmercator/{z}/{y}/{x}.png`,
+      ],
+      tileSize: 256,
+      maxzoom: KARTVERKET_WMTS_MAX_ZOOM,
+      attribution: KARTVERKET_ATTRIBUTION,
+    },
+  },
+  layer: {
+    id: 'kartverket-topo',
+    type: 'raster',
+    source: 'kartverket-topo-source',
+  },
+} satisfies MapLayerConfig
+
+export const kartverketTopoGraatone = {
+  name: 'Kartverket Topografisk gråtonekart',
+  category: 'background',
+  source: {
+    id: 'kartverket-topograatone-source',
+    definition: {
+      type: 'raster',
+      tiles: [
+        `${KARTVERKET_WMTS_BASE_URL}/topograatone/default/webmercator/{z}/{y}/{x}.png`,
+      ],
+      tileSize: 256,
+      maxzoom: KARTVERKET_WMTS_MAX_ZOOM,
+      attribution: KARTVERKET_ATTRIBUTION,
+    },
+  },
+  layer: {
+    id: 'kartverket-topograatone',
+    type: 'raster',
+    source: 'kartverket-topograatone-source',
   },
 } satisfies MapLayerConfig
 
@@ -57,91 +105,5 @@ export const kartverketFotrute = {
     id: 'kartverket-fotrute',
     type: 'raster',
     source: 'kartverket-fotrute-source',
-  },
-} satisfies MapLayerConfig
-
-export const summerHillshade = {
-  name: 'Mapterhorn hillshade',
-  category: 'thematic',
-  source: {
-    id: 'mapterhorn-hillshade-source',
-    definition: {
-      type: 'raster-dem',
-      url: 'https://tiles.mapterhorn.com/tilejson.json',
-    },
-  },
-  layer: {
-    id: 'ruteapp-summer-hillshade',
-    type: 'hillshade',
-    source: 'mapterhorn-hillshade-source',
-    paint: {
-      'hillshade-exaggeration': 0.22,
-      'hillshade-shadow-color': '#5f5549',
-      'hillshade-highlight-color': '#ffffff',
-      'hillshade-accent-color': '#776d61',
-    },
-  },
-} satisfies MapLayerConfig
-
-export const summerTrack = {
-  name: 'Fremhevede traktorveier',
-  category: 'thematic',
-  layer: {
-    id: 'ruteapp-summer-track',
-    type: 'line',
-    source: 'openmaptiles',
-    'source-layer': 'transportation',
-    filter: ['==', ['get', 'class'], 'track'],
-    layout: {
-      'line-cap': 'round',
-      'line-join': 'round',
-    },
-    paint: {
-      'line-color': '#a64b37',
-      'line-opacity': 0.88,
-      'line-width': [
-        'interpolate',
-        ['linear'],
-        ['zoom'],
-        10,
-        0.8,
-        13,
-        1.4,
-        16,
-        2.2,
-      ],
-    },
-  },
-} satisfies MapLayerConfig
-
-export const summerPath = {
-  name: 'Fremhevede stier',
-  category: 'thematic',
-  layer: {
-    id: 'ruteapp-summer-path',
-    type: 'line',
-    source: 'openmaptiles',
-    'source-layer': 'transportation',
-    filter: ['==', ['get', 'class'], 'path'],
-    layout: {
-      'line-cap': 'round',
-      'line-join': 'round',
-    },
-    paint: {
-      'line-color': '#d13d57',
-      'line-dasharray': [2, 1.5],
-      'line-opacity': 0.92,
-      'line-width': [
-        'interpolate',
-        ['linear'],
-        ['zoom'],
-        10,
-        0.7,
-        13,
-        1.25,
-        16,
-        1.9,
-      ],
-    },
   },
 } satisfies MapLayerConfig

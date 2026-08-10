@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Regenererbare rådata fra routing-import
+/data/routing/raw/*.json
+
+# Regenererbare diagnostikkartefakter fra routing-spikes
+/data/routing/diagnostics/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

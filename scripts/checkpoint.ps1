@@ -91,7 +91,7 @@ function Invoke-Checkpoint {
     }
 
     Write-Info "`nDette skal committes:"
-    & git diff --cached --stat
+    & git --no-pager diff --cached --stat
     if ($LASTEXITCODE -ne 0) {
         throw 'Kunne ikke vise staged endringer. Commit og push blir ikke forsøkt.'
     }
@@ -141,3 +141,4 @@ finally {
 }
 
 exit $exitCode
+

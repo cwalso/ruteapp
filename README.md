@@ -21,6 +21,20 @@ npm test
 
 Vitest is currently used for the UI-independent routing core.
 
+## Routing data
+
+The first static routing dataset covers Nerskogen and is generated from OpenStreetMap during development:
+
+```text
+npm run routing:fetch
+npm run routing:build
+npm run routing:verify
+```
+
+`routing:fetch` is the only step that contacts Overpass. Raw data is ignored by Git; the generated browser-ready dataset is written to `public/data/routing/nerskogen.json`. See `docs/architecture/osm-routing-import.md` for the import and access rules.
+
+The routing scripts require a Node version that supports `--experimental-strip-types` and are verified with Node 24.
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

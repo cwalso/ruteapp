@@ -8,6 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
+    "routing:fetch": "node --experimental-strip-types scripts/routing/fetchOsm.ts nerskogen",
+    "routing:build": "node --experimental-strip-types scripts/routing/buildDataset.ts nerskogen",
+    "routing:verify": "vitest run tests/routing/nerskogenDataset.test.ts --reporter=verbose --disableConsoleIntercept",
+    "routing:conflation-spike": "node scripts/routing/diagnostics/runFkbConflationSpike.mjs",
+    "routing:fkb-candidates": "node scripts/routing/diagnostics/runFkbValidationCandidates.mjs",
+    "routing:fkb-validation": "node scripts/routing/diagnostics/runFkbValidationSpike.mjs",
+    "routing:same-component-candidates": "node scripts/routing/diagnostics/runSameComponentShortcutCandidates.mjs",
+    "routing:virtual-candidates": "node scripts/routing/diagnostics/runVirtualConnectionCandidates.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

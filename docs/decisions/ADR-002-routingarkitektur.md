@@ -5,7 +5,7 @@
 
 ## Kontekst
 
-RuteApp har interaktiv rutepunktplanlegging, men den viste linjen og avstanden er fortsatt direkte geometri mellom punktene. For å kunne finne en faktisk fotturrute trengs en routingkjerne som arbeider på et eksplisitt nettverk, uten å bli koblet til React, MapLibre eller formatet til en bestemt datakilde.
+RuteApp har interaktiv rutepunktplanlegging og en nettleserbasert routingkjerne som beregner faktiske ruter på et eksplisitt nettverk uten å være koblet til React, MapLibre eller formatet til en bestemt datakilde.
 
 OpenStreetMap-rådata er planlagt som primært routinggrunnlag, men import og preprocessing er ikke besluttet. Samtidig må grafmodellen fra starten bevare RuteApps sentrale skille mellom ordinære forbindelser og eksplisitte virtuelle terrengforbindelser.
 
@@ -18,8 +18,9 @@ OpenStreetMap-rådata er planlagt som primært routinggrunnlag, men import og pr
 - Grafen skal representere ordinære edges av typene `path`, `track` og `road`, samt eksplisitte virtuelle edges av typen `virtual`.
 - Fysisk lengde i `distanceMeters` og optimaliseringsverdi i `cost` skal være separate egenskaper. `distanceMeters` skal representere faktisk ferdselslengde langs edgen og kan derfor ikke være kortere enn geografisk luftlinje mellom edge-endepunktene. Grafbyggere og framtidige importsteg har ansvar for å bevare denne invarianten. I den første modellen skal `cost` aldri være lavere enn `distanceMeters`.
 - A* skal bare forholde seg til grafens topologi og edge-kostnad. Algoritmen skal ikke ha særlogikk for OSM eller virtuelle edges.
+- Brukerens rutepunkt skal kobles til nærmeste punkt på en routing-edge innenfor konfigurert maksimalavstand. Snap midt på en edge skal håndteres med midlertidige noder og proporsjonalt splittede edges i en avledet graf for den enkelte ruteberegningen. Den cachede grunngrafen skal ikke modifiseres.
 - OpenStreetMap-rådata skal senere importeres og transformeres til den interne grafmodellen i et separat steg.
-- Via-routing skal senere kunne bygges ved å beregne delrutene `route(A, P1)`, `route(P1, P2)` og `route(P2, B)`, og deretter slå sammen ordnede edges, distanse og kostnad.
+- Via-routing beregnes som delrutene `route(A, P1)`, `route(P1, P2)` og `route(P2, B)`, og slår deretter sammen ordnede edges, distanse og kostnad.
 - Høydedata og høydeprofil skal senere behandles etter at rutegeometrien er funnet, gjennom en separat høydedatagrense.
 - Kartverket/Norgeskart og andre synlige kartlag forblir presentasjonsdata og skal ikke brukes som routingtopologi.
 
@@ -36,9 +37,10 @@ Ved å representere virtuelle forbindelser som vanlige edges med egen type og ko
 ## Konsekvenser
 
 - Routingkjernen kan testes uten DOM, React, MapLibre eller nettverkstilgang.
-- UI-et og kartet må senere integreres med routingkjernen gjennom en tydelig grense; denne integrasjonen er ikke implementert nå.
+- UI-et og kartet er integrert med routingkjernen gjennom en tydelig grense og beholder brukerpunktet separat fra snapped routingpunkt.
 - OSM-data må transformeres til den interne grafmodellen før ruting.
 - Retning må uttrykkes eksplisitt med edges; grafen oppretter ikke automatisk en motsatt edge.
+- Midlertidig splitting må bevare edge-retning, fysisk lengde, kostnad og `cost >= distanceMeters`.
 - Virtuelle edges kan få høyere kostnad enn sin fysiske lengde, men den endelige kostnadsmodellen er ikke besluttet.
 - Routing i nettleseren gjør datastørrelse, minnebruk, geografisk avgrensning og caching til viktige senere designspørsmål.
 - En eventuell senere flytting av rutemotoren må bevare domenekontrakten eller tilby et tilsvarende grensesnitt.
@@ -56,7 +58,7 @@ Disse alternativene kan vurderes på nytt dersom datamengde, ytelse eller produk
 
 ## Åpne spørsmål
 
-- Konkret OSM-import- og preprocessingmekanisme.
+- Videre OSM-import- og preprocessingmekanisme for større områder utover Nerskogen-prototypen.
 - Geografisk avgrensning og datastrategi for større områder.
 - Endelig kostnadsmodell for ulike edge-typer.
 - Regler for automatisk opprettelse av virtuelle forbindelser.
