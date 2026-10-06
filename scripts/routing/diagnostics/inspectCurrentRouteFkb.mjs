@@ -83,6 +83,13 @@ const features = (source.features ?? [])
   )
 
 console.log(`Walkable FKB features in bbox: ${features.length}`)
+const endpointComponents = findEndpointComponents(features)
+const corridorComponent = endpointComponents.find((component) =>
+  component.featureIndexes.includes(18),
+)
+console.log('CURRENT_ROUTE_FKB_COMPONENT_START')
+console.log(JSON.stringify(corridorComponent, null, 2))
+console.log('CURRENT_ROUTE_FKB_COMPONENT_END')
 console.log('CURRENT_ROUTE_FKB_JSON_START')
 console.log(
   JSON.stringify(
@@ -264,4 +271,75 @@ function nearestOsmSegment(point, segments) {
   }
 
   return nearest
+}
+
+
+function findEndpointComponents(features) {
+  const endpointToFeatureIndexes = new Map()
+
+  for (const feature of features) {
+    for (const endpoint of [feature.start, feature.end]) {
+      const key = endpointKey(endpoint)
+      const indexes = endpointToFeatureIndexes.get(key) ?? []
+      indexes.push(feature.index)
+      endpointToFeatureIndexes.set(key, indexes)
+    }
+  }
+
+  const featureByIndex = new Map(features.map((feature) => [feature.index, feature]))
+  const seen = new Set()
+  const components = []
+
+  for (const feature of features) {
+    if (seen.has(feature.index)) {
+      continue
+    }
+
+    const pending = [feature.index]
+    const indexes = []
+    seen.add(feature.index)
+
+    while (pending.length > 0) {
+      const index = pending.pop()
+      indexes.push(index)
+      const current = featureByIndex.get(index)
+
+      for (const endpoint of [current.start, current.end]) {
+        for (const neighborIndex of endpointToFeatureIndexes.get(endpointKey(endpoint)) ?? []) {
+          if (!seen.has(neighborIndex)) {
+            seen.add(neighborIndex)
+            pending.push(neighborIndex)
+          }
+        }
+      }
+    }
+
+    const members = indexes.map((index) => featureByIndex.get(index))
+    const endpointCandidates = members.flatMap((member) => [
+      {
+        featureIndex: member.index,
+        side: 'start',
+        coordinate: member.start,
+        osm: member.startOsm,
+      },
+      {
+        featureIndex: member.index,
+        side: 'end',
+        coordinate: member.end,
+        osm: member.endOsm,
+      },
+    ]).sort((first, second) => first.osm.distanceMeters - second.osm.distanceMeters)
+
+    components.push({
+      featureIndexes: indexes.sort((a, b) => a - b),
+      totalLengthMeters: members.reduce((sum, member) => sum + member.lengthMeters, 0),
+      nearestOsmEndpoints: endpointCandidates.slice(0, 10),
+    })
+  }
+
+  return components
+}
+
+function endpointKey(position) {
+  return `${position.longitude.toFixed(9)},${position.latitude.toFixed(9)}`
 }
