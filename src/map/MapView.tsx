@@ -403,7 +403,7 @@ function MapView({
       const element = marker.getElement()
       element.dataset.role = role.kind
       element.textContent = role.label
-      element.title = `${getRoleName(role.kind)} – dra for å flytte, høyreklikk for å fjerne`
+      element.title = `${getRoleName(role.kind)} – dra for å flytte. Fjern punktet i ruteoversikten.`
       element.setAttribute('aria-label', element.title)
       marker.setLngLat([point.longitude, point.latitude])
     })

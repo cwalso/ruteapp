@@ -339,6 +339,7 @@
 .route-point__content {
   display: grid;
   min-width: 0;
+  flex: 1;
   gap: 0.05rem;
 }
 
@@ -355,6 +356,30 @@
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.remove-route-point-button {
+  flex: 0 0 auto;
+  min-width: 3.25rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #b8c2bd;
+  border-radius: 0.4rem;
+  color: #3d5148;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.remove-route-point-button:hover {
+  background: #f4f7f5;
+}
+
+.remove-route-point-button:focus-visible {
+  outline: 3px solid rgb(23 79 122 / 45%);
+  outline-offset: 2px;
 }
 
 .development-routing-control {
@@ -397,6 +422,11 @@
   background: #f4f7f5;
 }
 
+.clear-route-button,
+.remove-route-point-button {
+  touch-action: manipulation;
+}
+
 .clear-route-button:focus-visible {
   outline: 3px solid rgb(47 107 82 / 30%);
   outline-offset: 2px;
@@ -415,9 +445,9 @@
 
 @media (max-width: 720px) {
   .app-shell {
-    height: auto;
-    min-height: 100svh;
-    overflow: visible;
+    height: 100svh;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .app-header {
@@ -435,30 +465,44 @@
   }
 
   .app-main {
-    display: grid;
-    grid-template-areas:
-      'map'
-      'panel';
-    grid-template-columns: minmax(0, 1fr);
+    position: relative;
+    display: block;
+    min-height: 0;
   }
 
   .map-region {
-    min-height: 48svh;
+    position: absolute;
+    inset: 0;
+    min-height: 0;
   }
 
   .route-panel {
-    position: relative;
-    z-index: 2;
-    margin-top: -0.75rem;
-    padding: 1.15rem 1rem 1.5rem;
-    overflow: visible;
-    border-top: 1px solid #d9dedb;
-    border-left: 0;
-    border-radius: 0.8rem 0.8rem 0 0;
+    position: absolute;
+    z-index: 3;
+    right: 0.55rem;
+    bottom: 0.55rem;
+    left: 0.55rem;
+    max-height: min(46svh, 32rem);
+    padding: 0.95rem 1rem 1rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #d9dedb;
+    border-radius: 0.9rem;
+    background: rgb(255 255 255 / 97%);
+    box-shadow: 0 0.5rem 1.5rem rgb(24 40 33 / 18%);
+    scrollbar-gutter: stable;
   }
 
   .route-panel__header {
-    padding-bottom: 0.9rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .route-panel-help {
+    margin-top: 0.4rem;
+  }
+
+  .route-overview {
+    padding: 0.75rem 0;
   }
 
   .route-metrics {
@@ -475,7 +519,25 @@
   }
 
   .route-points {
-    max-height: 13rem;
+    max-height: 10rem;
+  }
+
+  .route-point {
+    min-height: 3rem;
+  }
+
+  .point-marker {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  .remove-route-point-button,
+  .clear-route-button {
+    min-height: 2.75rem;
+  }
+
+  .development-routing-control {
+    font-size: 0.72rem;
   }
 }
 

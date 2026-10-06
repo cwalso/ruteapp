@@ -40,7 +40,9 @@ export function getLoadedNerskogenRoutingData() {
 }
 
 async function fetchRoutingData(): Promise<LoadedRoutingData> {
-  const response = await fetch('/data/routing/nerskogen.json')
+  const response = await fetch(
+    `${import.meta.env.BASE_URL}data/routing/nerskogen.json`,
+  )
 
   if (!response.ok) {
     throw new Error(`Routing dataset request failed: ${response.status}`)
