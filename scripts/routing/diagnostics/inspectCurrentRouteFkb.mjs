@@ -69,10 +69,7 @@ const features = (source.features ?? [])
       minDistanceToDirectLine,
       startOsm: nearestOsmSegment(positions[0], osmSegments),
       endOsm: nearestOsmSegment(positions.at(-1), osmSegments),
-      geometry:
-        minDistanceToDirectLine <= 40
-          ? feature.geometry
-          : undefined,
+      geometry: feature.geometry,
     }
   })
   .sort(
@@ -90,6 +87,26 @@ const corridorComponent = endpointComponents.find((component) =>
 console.log('CURRENT_ROUTE_FKB_COMPONENT_START')
 console.log(JSON.stringify(corridorComponent, null, 2))
 console.log('CURRENT_ROUTE_FKB_COMPONENT_END')
+const corridorPath = findFeaturePath(features, 35, 'end', 6, 'end')
+console.log('CURRENT_ROUTE_FKB_PATH_START')
+console.log(JSON.stringify(corridorPath, null, 2))
+console.log('CURRENT_ROUTE_FKB_PATH_END')
+console.log('CURRENT_ROUTE_FKB_PATH_GEOMETRY_START')
+console.log(
+  JSON.stringify(
+    corridorPath.featureIndexes.map((index) => {
+      const feature = features.find((candidate) => candidate.index === index)
+      return {
+        sourceId: `fkb-nerskogen-route-${index}`,
+        typeVeg: feature.typeveg,
+        geometry: feature.geometry,
+      }
+    }),
+    null,
+    2,
+  ),
+)
+console.log('CURRENT_ROUTE_FKB_PATH_GEOMETRY_END')
 console.log('CURRENT_ROUTE_FKB_JSON_START')
 console.log(
   JSON.stringify(
@@ -342,4 +359,86 @@ function findEndpointComponents(features) {
 
 function endpointKey(position) {
   return `${position.longitude.toFixed(9)},${position.latitude.toFixed(9)}`
+}
+
+
+function findFeaturePath(features, startFeatureIndex, startSide, endFeatureIndex, endSide) {
+  const featureByIndex = new Map(features.map((feature) => [feature.index, feature]))
+  const startFeature = featureByIndex.get(startFeatureIndex)
+  const endFeature = featureByIndex.get(endFeatureIndex)
+  const startPosition = startSide === 'start' ? startFeature.start : startFeature.end
+  const endPosition = endSide === 'start' ? endFeature.start : endFeature.end
+  const startKey = endpointKey(startPosition)
+  const endKey = endpointKey(endPosition)
+  const adjacency = new Map()
+
+  for (const feature of features) {
+    const fromKey = endpointKey(feature.start)
+    const toKey = endpointKey(feature.end)
+    const forward = adjacency.get(fromKey) ?? []
+    const reverse = adjacency.get(toKey) ?? []
+    forward.push({ toKey, featureIndex: feature.index, cost: feature.lengthMeters })
+    reverse.push({ toKey: fromKey, featureIndex: feature.index, cost: feature.lengthMeters })
+    adjacency.set(fromKey, forward)
+    adjacency.set(toKey, reverse)
+  }
+
+  const distances = new Map([[startKey, 0]])
+  const previous = new Map()
+  const pending = [[0, startKey]]
+
+  while (pending.length > 0) {
+    pending.sort((first, second) => first[0] - second[0])
+    const [currentDistance, currentKey] = pending.shift()
+
+    if (currentDistance !== distances.get(currentKey)) {
+      continue
+    }
+
+    if (currentKey === endKey) {
+      break
+    }
+
+    for (const edge of adjacency.get(currentKey) ?? []) {
+      const nextDistance = currentDistance + edge.cost
+
+      if (nextDistance < (distances.get(edge.toKey) ?? Number.POSITIVE_INFINITY)) {
+        distances.set(edge.toKey, nextDistance)
+        previous.set(edge.toKey, {
+          fromKey: currentKey,
+          featureIndex: edge.featureIndex,
+        })
+        pending.push([nextDistance, edge.toKey])
+      }
+    }
+  }
+
+  if (!distances.has(endKey)) {
+    throw new Error('No FKB corridor path found')
+  }
+
+  const featureIndexes = []
+  let currentKey = endKey
+
+  while (currentKey !== startKey) {
+    const step = previous.get(currentKey)
+
+    if (!step) {
+      throw new Error('Could not reconstruct FKB corridor path')
+    }
+
+    featureIndexes.push(step.featureIndex)
+    currentKey = step.fromKey
+  }
+
+  featureIndexes.reverse()
+
+  return {
+    startFeatureIndex,
+    startSide,
+    endFeatureIndex,
+    endSide,
+    distanceMeters: distances.get(endKey),
+    featureIndexes,
+  }
 }
