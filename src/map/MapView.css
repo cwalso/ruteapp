@@ -28,7 +28,7 @@
 }
 
 .map-profile-control select {
-  min-height: 1.95rem;
+  min-height: 2.75rem;
   padding: 0 0.35rem;
   border: 1px solid #bac5c0;
   border-radius: 0.35rem;
@@ -168,20 +168,35 @@
   .map-profile-control {
     top: 0.55rem;
     left: 0.55rem;
-    min-width: 8.75rem;
+    min-width: min(10.5rem, calc(100% - 5.4rem));
+    padding: 0.35rem 0.45rem 0.45rem;
+  }
+
+  .map-profile-control select {
+    min-height: 2.75rem;
+    font-size: 1rem;
   }
 
   .shortcut-debug-control {
-    top: 4.9rem;
-    left: 0.55rem;
-    width: min(16rem, calc(100% - 1.1rem));
+    display: none;
+  }
+
+  .map-view-shell .maplibregl-ctrl-top-right {
+    top: 0.55rem;
+    right: 0.55rem;
+  }
+
+  .route-marker {
+    width: 2.9rem;
+    height: 2.9rem;
+    font-size: 0.9rem;
   }
 }
 
 .route-marker {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   place-items: center;
   border: 2px solid #ffffff;
@@ -210,6 +225,24 @@
 }
 
 .route-marker:focus-visible {
+  outline: 3px solid rgb(23 79 122 / 55%);
+  outline-offset: 2px;
+}
+
+.map-profile-control select:focus-visible,
+.shortcut-debug-control button:focus-visible,
+.shortcut-debug-control select:focus-visible,
+.shortcut-debug-control input:focus-visible {
   outline: 3px solid rgb(23 79 122 / 45%);
+  outline-offset: 2px;
+}
+
+.map-view-shell .maplibregl-ctrl-group button {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.map-view-shell .maplibregl-ctrl-group button:focus-visible {
+  outline: 3px solid rgb(23 79 122 / 55%);
   outline-offset: 2px;
 }
