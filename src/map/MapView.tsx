@@ -343,7 +343,6 @@ function MapView({
         },
         trackUserLocation: true,
         showAccuracyCircle: true,
-        showUserHeading: true,
       }),
       'top-right',
     )
