@@ -21,6 +21,7 @@ type RoutePlanningPanelProps = {
   useApprovedShortcuts: boolean
   approvedShortcutCount?: number
   onUseApprovedShortcutsChange: (enabled: boolean) => void
+  onRemovePoint: (pointId: string) => void
   onClear: () => void
 }
 
@@ -37,6 +38,7 @@ function RoutePlanningPanel({
   useApprovedShortcuts,
   approvedShortcutCount,
   onUseApprovedShortcutsChange,
+  onRemovePoint,
   onClear,
 }: RoutePlanningPanelProps) {
   const viaPointCount = Math.max(0, routePoints.length - 2)
@@ -100,6 +102,14 @@ function RoutePlanningPanel({
                     <strong>{getPointName(role.kind, role.label)}</strong>
                     <span>{formatCoordinate(point)}</span>
                   </div>
+                  <button
+                    className="remove-route-point-button"
+                    type="button"
+                    onClick={() => onRemovePoint(point.id)}
+                    aria-label={`Fjern ${getPointName(role.kind, role.label)} fra ruten`}
+                  >
+                    Fjern
+                  </button>
                 </li>
               )
             })}
@@ -243,7 +253,7 @@ function getPlanningInstruction(pointCount: number) {
     return 'Startpunkt valgt. Klikk i kartet for å velge mål.'
   }
 
-  return 'Klikk for å legge til via-punkt. Dra for å flytte, høyreklikk for å fjerne.'
+  return 'Klikk i kartet for å legge til via-punkt. Dra markørene for å flytte. Fjern punkter i listen under.'
 }
 
 function getPointName(kind: 'start' | 'via' | 'end', label: string) {
@@ -294,12 +304,20 @@ function RoutingStatus({
   routingResult: RoutePlanningRoutingState
 }) {
   if (routingResult.status === 'loading') {
-    return <p className="routing-status">Routingdata lastes …</p>
+    return (
+      <p className="routing-status" role="status" aria-live="polite">
+        Routingdata lastes …
+      </p>
+    )
   }
 
   if (routingResult.status === 'loadError') {
     return (
-      <p className="routing-status routing-status--error" role="status">
+      <p
+        className="routing-status routing-status--error"
+        role="status"
+        aria-live="polite"
+      >
         Routingdata kunne ikke lastes.
       </p>
     )
@@ -307,7 +325,11 @@ function RoutingStatus({
 
   if (routingResult.status === 'outsideDataset') {
     return (
-      <p className="routing-status routing-status--error" role="status">
+      <p
+        className="routing-status routing-status--error"
+        role="status"
+        aria-live="polite"
+      >
         Dette området er ikke dekket av routingdata ennå.
       </p>
     )
@@ -315,7 +337,11 @@ function RoutingStatus({
 
   if (routingResult.status === 'noNearbyNetwork') {
     return (
-      <p className="routing-status routing-status--error" role="status">
+      <p
+        className="routing-status routing-status--error"
+        role="status"
+        aria-live="polite"
+      >
         Ingen sti eller vei nær nok dette punktet.
       </p>
     )
@@ -323,7 +349,11 @@ function RoutingStatus({
 
   if (routingResult.status === 'noRoute') {
     return (
-      <p className="routing-status routing-status--error" role="status">
+      <p
+        className="routing-status routing-status--error"
+        role="status"
+        aria-live="polite"
+      >
         Ingen sammenhengende rute funnet.
       </p>
     )
