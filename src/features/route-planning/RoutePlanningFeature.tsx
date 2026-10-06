@@ -275,6 +275,7 @@ function RoutePlanningFeature() {
             : undefined
         }
         onUseApprovedShortcutsChange={setUseApprovedShortcuts}
+        onRemovePoint={handleRemovePoint}
         onClear={handleClearRoute}
       />
     </main>
