@@ -94,14 +94,15 @@ function RoutePlanningFeature() {
       return { status: 'loadError' }
     }
 
-    const graph =
-      import.meta.env.DEV && useApprovedShortcuts
-        ? routingData.approvedShortcutGraph ?? routingData.graph
-        : routingData.graph
-    const snapGraph =
-      import.meta.env.DEV && useApprovedShortcuts
-        ? routingData.approvedShortcutSnapGraph ?? routingData.snapGraph
-        : routingData.snapGraph
+    const shouldUseApprovedShortcuts = import.meta.env.DEV
+      ? useApprovedShortcuts
+      : true
+    const graph = shouldUseApprovedShortcuts
+      ? routingData.approvedShortcutGraph ?? routingData.graph
+      : routingData.graph
+    const snapGraph = shouldUseApprovedShortcuts
+      ? routingData.approvedShortcutSnapGraph ?? routingData.snapGraph
+      : routingData.snapGraph
 
     return routeWaypoints(
       routePoints,
