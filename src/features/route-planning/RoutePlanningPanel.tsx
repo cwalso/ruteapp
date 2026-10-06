@@ -45,7 +45,7 @@ function RoutePlanningPanel({
   const viaPointCount = Math.max(0, routePoints.length - 2)
   const isRouted = routingResult.status === 'routed'
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const dragStartYRef = useRef<number>()
+  const dragStartYRef = useRef<number | undefined>(undefined)
   const didDragRef = useRef(false)
 
   useEffect(() => {
