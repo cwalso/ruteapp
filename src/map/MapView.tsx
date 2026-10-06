@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from 'react'
 import {
+  GeolocateControl,
   Map as MapLibreMap,
   Marker,
   NavigationControl,
@@ -335,6 +336,17 @@ function MapView({
     })
 
     map.addControl(new NavigationControl(), 'top-right')
+    map.addControl(
+      new GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true,
+        },
+        trackUserLocation: true,
+        showAccuracyCircle: true,
+        showUserHeading: true,
+      }),
+      'top-right',
+    )
 
     return () => {
       clearTimeout(resetDragStateTimer)
