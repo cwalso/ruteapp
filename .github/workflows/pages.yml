@@ -31,6 +31,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Diagnose current route FKB
+        if: github.ref == 'refs/heads/diagnostics/current-route-fkb'
+        run: node scripts/routing/diagnostics/inspectCurrentRouteFkb.mjs
+
       - name: Lint
         run: npm run lint
 
