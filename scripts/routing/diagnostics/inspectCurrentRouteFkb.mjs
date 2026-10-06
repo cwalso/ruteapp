@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+
 const WFS_ENDPOINT =
   'https://wms.geonorge.no/skwms1/wms.traktorveg_skogsbilveger'
 const WFS_BBOX = '62.789,9.592,62.797,9.622,EPSG:4326'
@@ -31,6 +33,10 @@ if (!response.ok) {
 }
 
 const source = await response.json()
+const routingDataset = JSON.parse(
+  await readFile(new URL('../../../public/data/routing/nerskogen.json', import.meta.url), 'utf8'),
+)
+const osmSegments = createOsmSegments(routingDataset)
 const features = (source.features ?? [])
   .filter((feature) =>
     feature.geometry?.type === 'LineString' &&
@@ -61,6 +67,12 @@ const features = (source.features ?? [])
       minDistanceToA,
       minDistanceToB,
       minDistanceToDirectLine,
+      startOsm: nearestOsmSegment(positions[0], osmSegments),
+      endOsm: nearestOsmSegment(positions.at(-1), osmSegments),
+      geometry:
+        minDistanceToDirectLine <= 40
+          ? feature.geometry
+          : undefined,
     }
   })
   .sort(
@@ -177,4 +189,79 @@ function project(position) {
 
 function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value))
+}
+
+
+function createOsmSegments(dataset) {
+  const nodes = new Map(
+    dataset.nodes.map(([id, longitude, latitude]) => [
+      id,
+      { longitude, latitude },
+    ]),
+  )
+  const seen = new Set()
+  const segments = []
+
+  for (const [, fromNodeId, toNodeId, , edgeType] of dataset.edges) {
+    const key = [fromNodeId, toNodeId].sort().join('|')
+
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    const from = nodes.get(fromNodeId)
+    const to = nodes.get(toNodeId)
+
+    if (from && to) {
+      segments.push({ fromNodeId, toNodeId, edgeType, from, to })
+    }
+  }
+
+  return segments
+}
+
+function nearestOsmSegment(point, segments) {
+  let nearest
+
+  for (const segment of segments) {
+    const projectedPoint = project(point)
+    const projectedFrom = project(segment.from)
+    const projectedTo = project(segment.to)
+    const directionX = projectedTo.x - projectedFrom.x
+    const directionY = projectedTo.y - projectedFrom.y
+    const lengthSquared = directionX ** 2 + directionY ** 2
+    const position =
+      lengthSquared === 0
+        ? 0
+        : clamp(
+            ((projectedPoint.x - projectedFrom.x) * directionX +
+              (projectedPoint.y - projectedFrom.y) * directionY) /
+              lengthSquared,
+            0,
+            1,
+          )
+    const snappedPosition = {
+      longitude:
+        segment.from.longitude +
+        (segment.to.longitude - segment.from.longitude) * position,
+      latitude:
+        segment.from.latitude +
+        (segment.to.latitude - segment.from.latitude) * position,
+    }
+    const distanceMeters = distance(point, snappedPosition)
+
+    if (!nearest || distanceMeters < nearest.distanceMeters) {
+      nearest = {
+        edgeType: segment.edgeType,
+        fromNodeId: segment.fromNodeId,
+        toNodeId: segment.toNodeId,
+        position,
+        distanceMeters,
+        snappedPosition,
+      }
+    }
+  }
+
+  return nearest
 }
