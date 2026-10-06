@@ -54,11 +54,6 @@ async function fetchRoutingData(): Promise<LoadedRoutingData> {
     ordinaryGraph,
     virtualConnectionConfig,
   )
-  let approvedShortcutGraph: RoutingGraph | undefined
-  let approvedShortcutSnapGraph: RoutingGraph | undefined
-  let approvedShortcutCandidates: readonly MaterializedSameComponentShortcut[] = []
-  let approvedShortcutMaterializationMilliseconds: number | undefined
-
   const startedAt = performance.now()
   const shortcutResult = createGraphWithApprovedSameComponentShortcuts(
     ordinaryGraph,
@@ -68,10 +63,11 @@ async function fetchRoutingData(): Promise<LoadedRoutingData> {
     virtualConnectionConfig.virtualCostMultiplier,
   )
 
-  approvedShortcutMaterializationMilliseconds = performance.now() - startedAt
-  approvedShortcutGraph = shortcutResult.graph
-  approvedShortcutSnapGraph = shortcutResult.snapGraph
-  approvedShortcutCandidates = shortcutResult.candidates
+  const approvedShortcutMaterializationMilliseconds =
+    performance.now() - startedAt
+  const approvedShortcutGraph = shortcutResult.graph
+  const approvedShortcutSnapGraph = shortcutResult.snapGraph
+  const approvedShortcutCandidates = shortcutResult.candidates
 
   if (import.meta.env.DEV) {
     console.debug('[RuteApp] Godkjente shortcuts materialisert', {
