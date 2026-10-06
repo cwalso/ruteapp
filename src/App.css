@@ -530,9 +530,14 @@
   }
 
   .route-panel--collapsed {
-    max-height: 3.1rem;
-    padding-bottom: 0;
-    overflow: hidden;
+    max-height: 3rem;
+    padding: 0;
+    overflow: visible;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    scrollbar-gutter: auto;
+    pointer-events: none;
   }
 
   .route-panel--collapsed .route-panel__header,
@@ -541,9 +546,20 @@
   }
 
   .route-panel--collapsed .route-panel__grabber {
-    min-height: 3rem;
-    margin-bottom: 0;
-    border-radius: 0.9rem;
+    position: relative;
+    width: 5.5rem;
+    min-height: 2.75rem;
+    margin: 0 auto;
+    border: 1px solid #d9dedb;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 97%);
+    box-shadow: 0 0.35rem 1rem rgb(24 40 33 / 18%);
+    cursor: ns-resize;
+    pointer-events: auto;
+  }
+
+  .route-panel--collapsed .route-panel__grabber span {
+    width: 2.4rem;
   }
 
   .route-panel__header {
