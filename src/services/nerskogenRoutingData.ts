@@ -1,4 +1,8 @@
 import {
+  addFkbOrdinaryRoutingSupplement,
+  type FkbOrdinaryRoutingSupplement,
+} from '../routing/fkbOrdinaryRoutingSupplement'
+import {
   loadRoutingDataset,
   parseRoutingDataset,
   type RuteAppRoutingDataset,
@@ -40,16 +44,33 @@ export function getLoadedNerskogenRoutingData() {
 }
 
 async function fetchRoutingData(): Promise<LoadedRoutingData> {
-  const response = await fetch(
-    `${import.meta.env.BASE_URL}data/routing/nerskogen.json`,
-  )
+  const [routingResponse, fkbResponse] = await Promise.all([
+    fetch(`${import.meta.env.BASE_URL}data/routing/nerskogen.json`),
+    fetch(
+      `${import.meta.env.BASE_URL}data/routing/nerskogen-fkb-corridor.json`,
+    ),
+  ])
 
-  if (!response.ok) {
-    throw new Error(`Routing dataset request failed: ${response.status}`)
+  if (!routingResponse.ok) {
+    throw new Error(
+      `Routing dataset request failed: ${routingResponse.status}`,
+    )
   }
 
-  const dataset = parseRoutingDataset(await response.json())
-  const ordinaryGraph = loadRoutingDataset(dataset)
+  if (!fkbResponse.ok) {
+    throw new Error(
+      `FKB routing supplement request failed: ${fkbResponse.status}`,
+    )
+  }
+
+  const dataset = parseRoutingDataset(await routingResponse.json())
+  const fkbSupplement =
+    (await fkbResponse.json()) as FkbOrdinaryRoutingSupplement
+  const osmGraph = loadRoutingDataset(dataset)
+  const ordinaryGraph = addFkbOrdinaryRoutingSupplement(
+    osmGraph,
+    fkbSupplement,
+  )
   const virtualConnectionResult = createGraphWithVirtualConnections(
     ordinaryGraph,
     virtualConnectionConfig,
