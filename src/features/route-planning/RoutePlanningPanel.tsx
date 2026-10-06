@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { RoutePoint } from '../../types/routePoint'
 import type { WaypointRoutingResult } from '../../routing/routeWaypoints'
 import ElevationProfileChart from './ElevationProfileChart'
@@ -43,9 +44,92 @@ function RoutePlanningPanel({
 }: RoutePlanningPanelProps) {
   const viaPointCount = Math.max(0, routePoints.length - 2)
   const isRouted = routingResult.status === 'routed'
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const dragStartYRef = useRef<number | undefined>(undefined)
+  const didDragRef = useRef(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 720px)')
+
+    const resetOnDesktop = () => {
+      if (!mediaQuery.matches) {
+        setIsCollapsed(false)
+      }
+    }
+
+    resetOnDesktop()
+    mediaQuery.addEventListener('change', resetOnDesktop)
+
+    return () => mediaQuery.removeEventListener('change', resetOnDesktop)
+  }, [])
+
+  const handleGrabberPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    dragStartYRef.current = event.clientY
+    didDragRef.current = false
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handleGrabberPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
+    const dragStartY = dragStartYRef.current
+
+    if (dragStartY === undefined) {
+      return
+    }
+
+    if (Math.abs(event.clientY - dragStartY) > 8) {
+      didDragRef.current = true
+    }
+  }
+
+  const handleGrabberPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    const dragStartY = dragStartYRef.current
+    dragStartYRef.current = undefined
+
+    if (dragStartY === undefined) {
+      return
+    }
+
+    const deltaY = event.clientY - dragStartY
+
+    if (deltaY > 32) {
+      setIsCollapsed(true)
+    } else if (deltaY < -32) {
+      setIsCollapsed(false)
+    }
+  }
+
+  const handleGrabberClick = () => {
+    if (didDragRef.current) {
+      didDragRef.current = false
+      return
+    }
+
+    setIsCollapsed((current) => !current)
+  }
 
   return (
-    <aside className="route-panel" aria-labelledby="route-panel-title">
+    <aside
+      className={`route-panel${isCollapsed ? ' route-panel--collapsed' : ''}`}
+      aria-labelledby="route-panel-title"
+    >
+      <button
+        className="route-panel__grabber"
+        type="button"
+        aria-expanded={!isCollapsed}
+        aria-controls="route-panel-content"
+        aria-label={isCollapsed ? 'Vis ruteplanlegging' : 'Skjul ruteplanlegging'}
+        onPointerDown={handleGrabberPointerDown}
+        onPointerMove={handleGrabberPointerMove}
+        onPointerUp={handleGrabberPointerUp}
+        onPointerCancel={() => {
+          dragStartYRef.current = undefined
+          didDragRef.current = false
+        }}
+        onClick={handleGrabberClick}
+      >
+        <span aria-hidden="true" />
+      </button>
+
       <header className="route-panel__header">
         <span className="panel-label">Ruteplanlegging</span>
         <h2 id="route-panel-title">Planlegg turen</h2>
@@ -54,6 +138,7 @@ function RoutePlanningPanel({
         </p>
       </header>
 
+      <div id="route-panel-content" className="route-panel__content">
       {isRouted && (
         <RouteOverview
           routingResult={routingResult}
@@ -143,6 +228,7 @@ function RoutePlanningPanel({
           Tøm rute
         </button>
       )}
+      </div>
     </aside>
   )
 }

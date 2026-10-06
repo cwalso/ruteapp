@@ -3,8 +3,7 @@ name: Test and deploy RuteApp to GitHub Pages
 on:
   push:
     branches:
-      - main
-      - ux/mobile-accessibility-baseline
+      - '**'
   workflow_dispatch:
 
 permissions:
@@ -52,6 +51,7 @@ jobs:
           path: dist
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: test
     environment:
       name: github-pages

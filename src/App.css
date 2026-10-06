@@ -56,6 +56,10 @@
   scrollbar-gutter: stable;
 }
 
+.route-panel__grabber {
+  display: none;
+}
+
 .route-panel__header {
   padding-bottom: 1rem;
 }
@@ -483,7 +487,7 @@
     bottom: 0.55rem;
     left: 0.55rem;
     max-height: min(46svh, 32rem);
-    padding: 0.95rem 1rem 1rem;
+    padding: 0 1rem 1rem;
     overflow-y: auto;
     overscroll-behavior: contain;
     border: 1px solid #d9dedb;
@@ -491,6 +495,55 @@
     background: rgb(255 255 255 / 97%);
     box-shadow: 0 0.5rem 1.5rem rgb(24 40 33 / 18%);
     scrollbar-gutter: stable;
+    transition:
+      max-height 180ms ease,
+      padding-bottom 180ms ease;
+  }
+
+  .route-panel__grabber {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    display: grid;
+    width: calc(100% + 2rem);
+    min-height: 2.4rem;
+    margin: 0 -1rem 0.2rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 0.9rem 0.9rem 0 0;
+    background: rgb(255 255 255 / 98%);
+    cursor: ns-resize;
+    touch-action: none;
+  }
+
+  .route-panel__grabber span {
+    width: 2.8rem;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: #9aa69f;
+  }
+
+  .route-panel__grabber:focus-visible {
+    outline: 3px solid rgb(23 79 122 / 45%);
+    outline-offset: -4px;
+  }
+
+  .route-panel--collapsed {
+    max-height: 3.1rem;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  .route-panel--collapsed .route-panel__header,
+  .route-panel--collapsed .route-panel__content {
+    display: none;
+  }
+
+  .route-panel--collapsed .route-panel__grabber {
+    min-height: 3rem;
+    margin-bottom: 0;
+    border-radius: 0.9rem;
   }
 
   .route-panel__header {
