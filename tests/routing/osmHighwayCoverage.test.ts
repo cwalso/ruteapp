@@ -97,9 +97,11 @@ describe('OSM highway coverage audit', () => {
     })
   })
 
-  it('keeps the audit additions separate from the current runtime policy', () => {
+  it('keeps validated runtime classes separate from remaining audit additions', () => {
+    expect(CURRENT_HIGHWAY_EDGE_TYPES.secondary).toBe('road')
     expect(CURRENT_HIGHWAY_EDGE_TYPES.tertiary).toBeUndefined()
     expect(CURRENT_HIGHWAY_EDGE_TYPES.cycleway).toBeUndefined()
+    expect(AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES.secondary).toBe('road')
     expect(AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES.tertiary).toBe('road')
     expect(AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES.cycleway).toBe('path')
     expect(AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES.motorway).toBeUndefined()
