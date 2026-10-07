@@ -167,7 +167,7 @@ describe('Nerskogen OSM routing dataset', () => {
     )
   })
 
-  it('keeps Ørnkjellhaugan as a golden route with one explicit virtual connection', () => {
+  it('keeps Ørnkjellhaugan routable with one explicit virtual connection', () => {
     virtualConnectionResult ??= createGraphWithVirtualConnections(
       graph,
       virtualConnectionConfig,
@@ -214,7 +214,7 @@ describe('Nerskogen OSM routing dataset', () => {
         .some(({ edgeType }) => edgeType !== 'virtual'),
     ).toBe(true)
     console.info(
-      `Ørnkjellhaugan golden route: ${result.route.totalDistanceMeters.toFixed(1)} m, ` +
+      `Ørnkjellhaugan route: ${result.route.totalDistanceMeters.toFixed(1)} m, ` +
         `${result.route.virtualEdgeCount} virtual edge, ` +
         `${result.route.virtualDistanceMeters.toFixed(1)} m virtual distanse`,
     )
