@@ -1,13 +1,13 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import process from 'node:process'
-import { getRoutingArea } from './routingAreas.ts'
 import { AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES } from './osmWalkingPolicy.ts'
+import { getRoutingArea } from './routingAreas.ts'
 import { getRawOsmPath } from './routingPaths.ts'
 
 const OVERPASS_ENDPOINTS = [
-  'https://overpass.private.coffee/api/interpreter',
   'https://overpass-api.de/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
 ] as const
 
 const OVERPASS_REQUEST_TIMEOUT_MILLISECONDS = 30_000
@@ -16,24 +16,9 @@ const areaId = process.argv[2] ?? 'nerskogen'
 const area = getRoutingArea(areaId)
 const rawOsmPath = getRawOsmPath(area.id)
 const { south, west, north, east } = area.bounds
-const highwayPattern = `^(${Object.keys(AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES).join('|')})import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
-import process from 'node:process'
-import { getRoutingArea } from './routingAreas.ts'
-import { AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES } from './osmWalkingPolicy.ts'
-import { getRawOsmPath } from './routingPaths.ts'
-
-const OVERPASS_ENDPOINTS = [
-  'https://overpass.private.coffee/api/interpreter',
-  'https://overpass-api.de/api/interpreter',
-] as const
-
-const OVERPASS_REQUEST_TIMEOUT_MILLISECONDS = 30_000
-
-const areaId = process.argv[2] ?? 'nerskogen'
-const area = getRoutingArea(areaId)
-const rawOsmPath = getRawOsmPath(area.id)
-
+const highwayPattern = `^(${Object.keys(
+  AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES,
+).join('|')})$`
 const query = `[out:json][timeout:120];
 (
   way["highway"~"${highwayPattern}"](${south},${west},${north},${east});
@@ -91,7 +76,9 @@ async function fetchOverpassSnapshot(overpassQuery: string) {
         error instanceof Error
           ? error
           : new Error(`Unknown Overpass error at ${endpoint}`)
-      console.warn(`Overpass request failed at ${endpoint}: ${lastError.message}`)
+      console.warn(
+        `Overpass request failed at ${endpoint}: ${lastError.message}`,
+      )
     }
   }
 
