@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
 import { describe, expect, it } from 'vitest'
 import { findRoute } from '../../src/routing/aStar'
+import {
+  addFkbOrdinaryRoutingSupplement,
+  type FkbOrdinaryRoutingSupplement,
+} from '../../src/routing/fkbOrdinaryRoutingSupplement'
 import { findNearestRoutingEdgePoint } from '../../src/routing/nearestRoutingEdgePoint'
 import {
   createRoutableMapSegments,
@@ -22,9 +26,16 @@ const datasetPath = new URL(
   '../../public/data/routing/nerskogen.json',
   import.meta.url,
 )
+const supplementPath = new URL(
+  '../../public/data/routing/nerskogen-fkb-corridor.json',
+  import.meta.url,
+)
 const dataset: RuteAppRoutingDataset = parseRoutingDataset(
   JSON.parse(readFileSync(datasetPath, 'utf8')),
 )
+const supplement = JSON.parse(
+  readFileSync(supplementPath, 'utf8'),
+) as FkbOrdinaryRoutingSupplement
 const graph = loadRoutingDataset(dataset)
 const westernCoveragePoint = {
   latitude: 62.8028,
@@ -168,22 +179,30 @@ describe('Nerskogen OSM routing dataset', () => {
   })
 
   it('keeps Ørnkjellhaugan routable with one explicit virtual connection', () => {
-    virtualConnectionResult ??= createGraphWithVirtualConnections(
+    const ordinaryRuntimeGraph = addFkbOrdinaryRoutingSupplement(
       graph,
+      supplement,
+    )
+    const runtimeVirtualConnectionResult = createGraphWithVirtualConnections(
+      ordinaryRuntimeGraph,
       virtualConnectionConfig,
     )
-    const startNode = graph.nodes.get(ornkjellhauganGoldenRoute.startNodeId)
-    const targetNode = graph.nodes.get(ornkjellhauganGoldenRoute.targetNodeId)
+    const startNode = ordinaryRuntimeGraph.nodes.get(
+      ornkjellhauganGoldenRoute.startNodeId,
+    )
+    const targetNode = ordinaryRuntimeGraph.nodes.get(
+      ornkjellhauganGoldenRoute.targetNodeId,
+    )
 
     expect(startNode).toBeDefined()
     expect(targetNode).toBeDefined()
 
     const result = routeWaypoints(
       [startNode!, targetNode!],
-      virtualConnectionResult.graph,
+      runtimeVirtualConnectionResult.graph,
       dataset.metadata.bounds,
       100,
-      virtualConnectionResult.snapGraph,
+      runtimeVirtualConnectionResult.snapGraph,
     )
 
     expect(result.status).toBe('routed')
@@ -204,7 +223,7 @@ describe('Nerskogen OSM routing dataset', () => {
       virtualConnectionConfig.maxVirtualDistanceMeters,
     )
     expect(result.route.virtualDistanceMeters).toBeCloseTo(72.873, 3)
-    expect(result.route.totalDistanceMeters).toBeCloseTo(2108.916, 2)
+    expect(result.route.totalDistanceMeters).toBeCloseTo(2108.916, 3)
     expect(
       result.route.edges
         .slice(0, firstVirtualEdgeIndex)
