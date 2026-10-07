@@ -69,7 +69,7 @@ Full oppnåelse av «det brukeren ser som RuteApp-sti, er rutbart» krever på s
 
 ## Resultat for Nerskogen
 
-Det committed datasettet inneholder 26 806 directed edges. Transformasjonen gir 13 403 fysiske segmenter og 3,23 MB ukomprimert GeoJSON. Målingen under `npm run routing:verify` brukte 69,3 ms på transformasjon i den aktuelle kjøringen. Tallet er en utviklingsmåling og ikke en stabil ytelsesgaranti.
+Det committed datasettet inneholder 30 602 directed edges. Transformasjonen gir 15 301 fysiske segmenter og 3,69 MB ukomprimert GeoJSON. Målingen i CI etter `secondary`-policyendringen brukte 114,1 ms på transformasjonen. Tallene er utviklingsmålinger og ikke stabile ytelsesgarantier.
 
 MapLibre kan tegne nettet responsivt i Nerskogen på zoom 11–16. I den rene headless Edge-kontrollen nådde profilbyttet `idle` med GeoJSON-kilden lastet etter omtrent 1,1 sekund med varme kartfliser. Profilbytte reetablerer kilden og de tre lagene idempotent sammen med eksisterende app-genererte lag. Panorering og zoom ga ingen tydelig interaksjonsforsinkelse i det avgrensede testområdet.
 
@@ -77,7 +77,7 @@ Den samme kildegeometrien ligger bak synlig segment og edge-snapping. Manuell ko
 
 ## Skalering
 
-Ett GeoJSON på 3,23 MB er akseptabelt for denne regionale spiken, men modellen skal ikke skaleres til hele Norge som én klientlastet FeatureCollection. Ved større dekning blir regional lasting, romlig utsnitt og sannsynligvis tile-basert levering nødvendig. Den rene transformasjonen og det stabile skillet mellom segmentmodell og MapLibre-kilde gjør det mulig å endre transportformat senere uten å endre routingsemantikken.
+Ett GeoJSON på 3,69 MB er akseptabelt for denne regionale spiken, men modellen skal ikke skaleres til hele Norge som én klientlastet FeatureCollection. Ved større dekning blir regional lasting, romlig utsnitt og sannsynligvis tile-basert levering nødvendig. Den rene transformasjonen og det stabile skillet mellom segmentmodell og MapLibre-kilde gjør det mulig å endre transportformat senere uten å endre routingsemantikken.
 
 ## Framtidig normalisering med flere kilder
 
