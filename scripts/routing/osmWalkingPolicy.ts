@@ -11,6 +11,7 @@ export const CURRENT_HIGHWAY_EDGE_TYPES: Readonly<
   steps: 'path',
   track: 'track',
   service: 'road',
+  secondary: 'road',
   unclassified: 'road',
   residential: 'road',
   living_street: 'road',
@@ -20,7 +21,6 @@ export const AUDIT_ADDITIONAL_HIGHWAY_EDGE_TYPES: Readonly<
   Record<string, OrdinaryEdgeType>
 > = {
   primary: 'road',
-  secondary: 'road',
   tertiary: 'road',
   primary_link: 'road',
   secondary_link: 'road',
