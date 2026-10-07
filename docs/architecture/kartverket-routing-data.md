@@ -259,6 +259,14 @@ En framtidig generell importer bør ikke legge FKB-geometri direkte inn i dagens
 
 Det kjente gapet bør brukes som en fast akseptansefixture: en FKB-basert import skal kunne representere den omtrent 276 meter lange stien, samtidig som eksisterende OSM-segmenter ikke dupliseres og dagens OSM-regresjonstest forblir uendret.
 
+## Midlertidig runtime-bruk rundt 837/844
+
+Den publiserte Nerskogen-prototypen inneholder per 2026-10-07 et kuratert FKB-supplement på 55 objekter rundt 837/844. Dette er et avgrenset utviklingsgrunnlag, ikke en beslutning om generell FKB-distribusjon eller produksjonsbruk.
+
+Etter utvidelsen ble det funnet flere FKB-endepunkter som ligger praktisk sammenfallende med OSM-nettet, men som manglet eksplisitt topologisk kobling. Ti slike FKB–OSM-koblingspunkter er nå kuratert totalt. Alle ligger innenfor den eksisterende, case-spesifikke toleransen på 1 meter og kobles til en eksplisitt forventet OSM-edge. Dette er fortsatt ikke en generell conflation-regel.
+
+Det offentlige FKB-uttrekket skal ikke utvides videre før rett til lagring og videre distribusjon er avklart. Videre arbeid med bredere FKB-dekning skal derfor skje i diagnostikk-/testgrunnlag eller med en autorisert leveranse, ikke ved å legge større uttrekk i `public/`.
+
 ## Lisens og kreditering
 
 N50 Kartdata er oppført med Creative Commons Navngivelse 4.0 Internasjonal. Kartverkets anbefalte kreditering for åpne produkter er `© Kartverket`, med lenke til Kartverket der det er praktisk.
