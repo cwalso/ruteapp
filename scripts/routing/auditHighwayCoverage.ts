@@ -41,6 +41,20 @@ console.log(
   `  utvidede komponenter som samler flere baseline-komponenter: ${report.delta.expandedComponentsJoiningBaseline}`,
 )
 console.log('')
+console.log('Audit-tillegg, konkrete ways:')
+
+for (const way of report.auditAdditionWays) {
+  console.log(
+    `  ${way.highway} way ${way.id}: name=${formatTag(way.name)}, ref=${formatTag(way.ref)}, ` +
+      `${(way.inBoundsDistanceMeters / 1000).toFixed(2)} km, segments=${way.inBoundsSegments}, ` +
+      `baseline-components=${way.baselineComponentsTouched}, access-pass=${way.passingCurrentAccessFilter}, ` +
+      `foot=${formatTag(way.foot)}, access=${formatTag(way.access)}, sidewalk=${formatTag(way.sidewalk)}, ` +
+      `sidewalk:left=${formatTag(way.sidewalkLeft)}, sidewalk:right=${formatTag(way.sidewalkRight)}, ` +
+      `surface=${formatTag(way.surface)}, maxspeed=${formatTag(way.maxspeed)}`,
+  )
+}
+
+console.log('')
 console.log('Observerte highway-klasser:')
 
 for (const stats of report.observedHighways) {
@@ -69,4 +83,8 @@ function printMetrics(metrics: {
   console.log(`  lengde: ${(metrics.totalDistanceMeters / 1000).toFixed(2)} km`)
   console.log(`  komponenter: ${metrics.components}`)
   console.log(`  største komponent: ${metrics.largestComponentNodes} noder`)
+}
+
+function formatTag(value: string | null) {
+  return value ?? '∅'
 }
