@@ -16,7 +16,8 @@
     "routing:fkb-validation": "node scripts/routing/diagnostics/runFkbValidationSpike.mjs",
     "routing:same-component-candidates": "node scripts/routing/diagnostics/runSameComponentShortcutCandidates.mjs",
     "routing:virtual-candidates": "node scripts/routing/diagnostics/runVirtualConnectionCandidates.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "routing:audit-highways": "node --experimental-strip-types scripts/routing/auditHighwayCoverage.ts nerskogen"
   },
   "dependencies": {
     "maplibre-gl": "^6.2.0",
