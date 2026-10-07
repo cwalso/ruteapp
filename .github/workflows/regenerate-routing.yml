@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - routing/include-secondary-backbone
+    paths:
+      - scripts/routing/osmWalkingPolicy.ts
+      - tests/routing/osmHighwayCoverage.test.ts
+      - tests/routing/nerskogenDataset.test.ts
+      - .github/workflows/regenerate-routing.yml
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
@@ -39,6 +44,20 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "VERIFY_STATUS=${status}" >> "${GITHUB_ENV}"
           exit ${status}
+
+      - name: Commit regenerated dataset
+        if: success()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/routing/nerskogen.json
+          if git diff --cached --quiet; then
+            echo "Routing dataset unchanged"
+          else
+            git commit -m "Regenerate Nerskogen routing dataset"
+            git push
+          fi
 
       - name: Upload regenerated dataset and verification log
         if: always()
