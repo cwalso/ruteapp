@@ -2,9 +2,9 @@
 
 ## Formål og status
 
-Dette dokumentet beskriver en diagnostikkspike for mulige lokale forbindelser mellom geografisk nærliggende deler av samme ordinære routingkomponent. Den generelle spiken oppdager og eksporterer kandidater, men materialiserer dem ikke automatisk som `virtual`-edges. Vanlig ruteberegning og produksjonsbygget er derfor uendret.
+Dette dokumentet beskriver en diagnostikkspike for mulige lokale forbindelser mellom geografisk nærliggende deler av samme ordinære routingkomponent. Den generelle spiken oppdager og eksporterer kandidater, men materialiserer dem ikke automatisk som `virtual`-edges.
 
-Et separat, kontrollert development-eksperiment kan materialisere fire manuelt godkjente kandidater når brukeren slår på en toggle. Dette er ikke en ny arkitekturbeslutning eller en produksjonsregel. Kandidatene må fortsatt evalueres før terskler, terrengregler eller generell materialisering kan besluttes.
+Fire manuelt godkjente, preberegnede kandidater ligger i en eksplisitt allowlist og kan materialiseres uten at den kostbare generatoren kjøres i nettleseren. Produksjonsrutingen bruker den godkjente shortcut-grafen som standard; i development kan en toggle brukes til å sammenligne baseline og den godkjente grafen. Dette er fortsatt ikke en generell automatisk shortcut-policy.
 
 ## To kandidattyper
 
@@ -41,7 +41,7 @@ Maksimal direkteavstand følger foreløpig samme 200-meters utgangspunkt som com
 
 ## Geografisk nærhet
 
-Generatoren lager først én fysisk segmentrepresentasjon for motsatt rettede ordinary edges. `path`, `track` og `road` behandles separat; virtuelle edges filtreres ut før all analyse. Segmentene legges i en enkel lokal, meterbasert gridindeks, slik at bare romlig nærliggende segmentpar sammenlignes. Dette unngår full O(N²)-sammenligning av alle 13 403 fysiske Nerskogen-segmenter.
+Generatoren lager først én fysisk segmentrepresentasjon for motsatt rettede ordinary edges. `path`, `track` og `road` behandles separat; virtuelle edges filtreres ut før all analyse. Segmentene legges i en enkel lokal, meterbasert gridindeks, slik at bare romlig nærliggende segmentpar sammenlignes. Dette unngår full O(N²)-sammenligning av alle 15 301 fysiske Nerskogen-segmenter.
 
 Nærmeste punkt beregnes edge-til-edge i en lokal planprojeksjon. Punktene kan ligge inne på begge segmentene; direkte avstand etterberegnes med den delte geografiske Haversine-funksjonen. Samme fysiske segment, segmenter som deler node, forskjellige komponenter og avstander utenfor 10–200 meter filtreres før nettverkssøk.
 
@@ -61,16 +61,18 @@ Dette er en enkel lokal klyngeregel. Den kan både beholde flere kandidater i et
 
 `npm run routing:same-component-candidates` kjører mot det committed Nerskogen-datasettet og eksporterer Git-ignorert GeoJSON til `data/routing/diagnostics/same-component-shortcuts.geojson`.
 
-Målingen 10. august 2026 ga:
+Målingen mot gjeldende datasett 7. oktober 2026 ga:
 
-- 57 ordinary components
-- 13 403 fysiske ordinary-segmenter
-- 3 047 714 unike geografiske segmentpar vurdert etter gridindeksering
-- 602 822 par innenfor 10–200 meter sendt til nettverksmåling
-- 1 261 212 faktiske A*-kjøringer etter cache
-- 20 429 kandidater før lokal deduplisering
-- 1 659 kandidater etter deduplisering
-- omtrent 52–70 sekunder samlet kjøretid i de kontrollerte kjøringene
+- 16 ordinary components
+- 15 301 fysiske ordinary-segmenter
+- 3 733 804 unike geografiske segmentpar vurdert etter gridindeksering
+- 750 865 par innenfor 10–200 meter sendt til nettverksmåling
+- 1 565 848 faktiske A*-kjøringer etter cache
+- 26 772 kandidater før lokal deduplisering
+- 2 118 kandidater etter deduplisering
+- omtrent 62,5 sekunder samlet kjøretid i den kontrollerte CI-kjøringen
+
+Den tidligere målingen før `secondary` ble aktivert hadde 57 komponenter, 13 403 segmenter og 1 659 dedupliserte kandidater. Tallene er diagnostikkmålinger og ikke ytelsesgarantier.
 
 Kjøretiden er akseptabel for et eksplisitt, lokalt diagnostikkscript, men ikke for runtime eller interaktiv bruk. Kandidatmengden viser også at terreng-, barriere- og datakvalitetsvurdering er nødvendig før eventuell materialisering. Videre ytelsesarbeid bør først vurderes etter manuell analyse av funnene.
 
@@ -81,13 +83,13 @@ Det tidligere dokumenterte caset med omtrent 5 km ordinær omvei ble funnet:
 - kandidat: `same-component-shortcut:1446990760:1:f:1.000000:896319498:8:f:1.000000`
 - edges: `1446990760:1:f` (`path`) og `896319498:8:f` (`road`)
 - direkte avstand: 85,4 meter
-- ordinær nettverksavstand: 5 053,4 meter
-- detour ratio: 59,2
+- ordinær nettverksavstand i gjeldende graf: omtrent 2 913,0 meter
+- detour ratio i gjeldende graf: omtrent 34,1
 - koblingspunktene samsvarer med de tidligere identifiserte gapnodene `13276455322` og `8332065102`
 
-Den eksisterende ruteregresjonen mellom brukerkoordinatene er fortsatt 5 049,3 meter over 199 edges. Spiken påviser kandidaten, men endrer ikke ruten.
+Etter at `secondary` ble aktivert er den ordinære ruten mellom brukerkoordinatene omtrent 2 911,7 meter over 235 edges. Spiken påviser fortsatt kandidaten, men endrer ikke ruten.
 
-Ørnkjellhaugan-golden-casets edges `896319493:3:f` og `303552729:1:f` ligger i forskjellige ordinary components. Paret ble derfor korrekt ikke emittert av same-component-generatoren og forblir ansvaret til component-gap-logikken.
+Ørnkjellhaugan-casets edges `896319493:3:f` og `303552729:1:f` ligger fortsatt i forskjellige ordinary components etter `secondary`, nå `10004160051` og `3079323657`. Paret emitteres derfor korrekt ikke av same-component-generatoren. Den observerte ruteregresjonen etter policyendringen må løses i component-gap-kandidatutvalget, ikke ved å flytte caset til same-component.
 
 ## GeoJSON og development-evaluering
 
@@ -105,7 +107,7 @@ Kartvisningen er bare et evalueringsverktøy. Den materialiserer ingen kandidat 
 
 Et lite manuelt utvalg er vurdert for å teste selve routingmekanismen:
 
-**Godkjent for videre development-testing:**
+**Godkjent utvalg (fixture-metadata fra den opprinnelige manuelle vurderingen før `secondary`):**
 
 - `SC-C4239590`, 85,4 meter direkte og 5 053,4 meter ordinary network distance: brukbar eksperimentell forbindelse.
 - `SC-9F0B4DCE`, 41,1 meter direkte og 3 695,9 meter ordinary network distance: naturlig terrenggap.
@@ -120,11 +122,11 @@ Et lite manuelt utvalg er vurdert for å teste selve routingmekanismen:
 
 - `SC-E6B34D30`: den registrerte ordinære stien går allerede over elva ved et vadested. Elvekryssingen er derfor ordinary routing, ikke grunnlag for en virtual edge.
 
-`sameComponentShortcutDevAllowlist.ts` inneholder kun de fire godkjente deterministiske full-ID-ene. `SC-XXXXXXXX` brukes fortsatt bare som display-ID og er ikke routingidentitet. En liten preberegnet fixture i `sameComponentShortcutDevCandidates.ts` inneholder full kandidatdata for de samme fire. Dermed kjøres ikke den 50–70 sekunder lange generatoren i nettleseren, og de øvrige 1 655 kandidatene legges ikke i runtime-fixturen.
+`sameComponentShortcutDevAllowlist.ts` inneholder kun de fire godkjente deterministiske full-ID-ene. Nettverksavstand og detour ratio i den preberegnede fixturen er historiske evalueringsmetadata; routingkostnaden for materialiserte shortcuts beregnes fra direkteavstanden og `virtualCostMultiplier`, ikke fra disse historiske nettverksmålene. `SC-XXXXXXXX` brukes fortsatt bare som display-ID og er ikke routingidentitet. En liten preberegnet fixture i `sameComponentShortcutDevCandidates.ts` inneholder full kandidatdata for de samme fire. Dermed kjøres ikke den 50–70 sekunder lange generatoren i nettleseren, og de øvrige 1 655 kandidatene legges ikke i runtime-fixturen.
 
 I development mode bygges en ekstra derived graph fra dagens component-gap-graf. `sameComponentShortcutMaterialization.ts` finner kandidatens faktiske punkt på den navngitte ordinary edgen, bruker eksisterende robuste edge-splitting og legger forbindelsen inn begge veier med `edgeType = virtual`. Retning, proporsjonal distanse, proporsjonal cost og ordinary edge-type bevares i de splittede delene. Den cachede ordinary-grafen og dagens derived graph muteres ikke. Shortcutens cost bruker samme `virtualCostMultiplier = 3` som component-gap-forbindelsene.
 
-Development-kontrollen «Bruk godkjente shortcuts i routing» er av som standard. Av betyr dagens graf og dagens rutevalg. På velger den ekstra grafen med fire mulige virtual edges. Brukte shortcuts inngår dermed automatisk i eksisterende lilla stiplede rutevisualisering, `virtualEdgeCount`, `virtualDistanceMeters`, høydegeometri og gangtidsgrunnlag. De inngår aldri i RuteApps ordinære routable map layer.
+I development mode kan kontrollen «Bruk godkjente shortcuts i routing» sammenligne baseline med den ekstra grafen. I produksjonsbygget brukes den godkjente shortcut-grafen som standard. Brukte shortcuts inngår dermed automatisk i eksisterende lilla stiplede rutevisualisering, `virtualEdgeCount`, `virtualDistanceMeters`, høydegeometri og gangtidsgrunnlag. De inngår aldri i RuteApps ordinære routable map layer.
 
 En same-component virtual edge representerer i denne MVP-en en mulig lokal forbindelse mellom to deler av nettet. Den rette linjen uttrykker routingkoblingen og dens omtrentlige direkteavstand, men skal ikke tolkes som at brukeren nødvendigvis må følge nøyaktig denne GPS-traseen. Lokale objekter kan gjøre at praktisk gange avviker noe. Eksperimentet beregner ikke en kurvet omgåelse rundt slike objekter.
 
