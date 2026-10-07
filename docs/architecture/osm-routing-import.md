@@ -35,7 +35,7 @@ east:   9.69
 
 Området ble moderat utvidet 2026-08-09 fordi et naturlig manuelt testpunkt ved latitude `62.80280`, longitude `9.52499` lå like vest for den tidligere grensen `west=9.53`. Ny vestgrense gir omtrent 1,3 kilometer margin rundt punktet. Samtidig ble sør-, nord- og østgrensene flyttet noe for å redusere risikoen for en ny kunstig testgrense, uten å gjøre datasettet større enn det nettleserbaserte MVP-et trenger.
 
-Den tidligere bbox-en var `62.745, 9.53, 62.815, 9.67`. Etter regenerering økte datasettet fra 10 604 til 13 341 noder, fra 21 330 til 26 806 rettede edges og fra 2 287 862 til 2 877 519 bytes. Importregler, access-tolkning, edge-type-mapping og kostnadsmodell er uendret.
+Den tidligere bbox-en var `62.745, 9.53, 62.815, 9.67`. Ved bbox-utvidelsen økte det daværende datasettet fra 10 604 til 13 341 noder og fra 21 330 til 26 806 rettede edges. Disse tallene er historiske og beskriver effekten av bbox-endringen før `secondary` ble aktivert. Etter policyendringen 7. oktober 2026 inneholder dagens regenererte datasett 15 147 noder og 30 602 rettede edges, tilsvarende 15 301 fysiske segmenter.
 
 Overpass returnerer hele ways som berører en bbox. Preprocessoren beholder derfor bare segmenter hvor begge endenoder ligger innenfor den konfigurerte bbox-en. Nerskogen er kun en datasettkonfigurasjon og er ikke hardkodet i routingkjernen.
 
@@ -75,13 +75,13 @@ Første access-regel er bevisst liten:
 
 Vanlige forbindelser genereres begge veier. `oneway:foot=yes`, `true` eller `1` gir bare OSM-retningen, mens `oneway:foot=-1` gir motsatt retning. Generell `oneway` for kjøretøy brukes ikke som fotgjengerregel.
 
-## Highway coverage-audit 7. oktober 2026
+## Highway coverage-audit 7. oktober 2026 – baseline før `secondary` ble aktivert
 
-Dagens eksplisitte highway-liste ble kontrollert mot en utvidet policy fordi et manglende road backbone kan få ordinære OSM-forbindelser til å fremstå som separate komponenter og dermed skape falskt behov for FKB-supplement eller virtuelle forbindelser.
+Før policyendringen 7. oktober 2026 ble den daværende eksplisitte highway-listen kontrollert mot en utvidet policy fordi et manglende road backbone kan få ordinære OSM-forbindelser til å fremstå som separate komponenter og dermed skape falskt behov for FKB-supplement eller virtuelle forbindelser. Tabellen under er derfor et historisk før/etter-grunnlag for beslutningen om å aktivere `secondary`; den beskriver ikke output fra dagens audit-policy.
 
 Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T10:05:10Z`, for begge policyene.
 
-| Mål | Dagens policy | Utvidet audit-policy | Endring |
+| Mål | Policy før `secondary` | Policy med `secondary` | Endring |
 | --- | ---: | ---: | ---: |
 | Ways | 1 023 | 1 033 | +10 |
 | Noder | 14 737 | 15 147 | +410 |
@@ -92,7 +92,7 @@ Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T10:05:10Z`, f
 
 I dette Nerskogen-snapshotet var `secondary` den eneste av de foreslåtte tilleggsklassene som faktisk forekom. Det var nøyaktig 10 slike ways. En separat kontroll av objekttaggene viste at samtlige er segmenter av fylkesvei 6516: Nerskogsveien/Nerskogvegen, Minnillbrua og Grønbrua. Alle er asfalterte, har `maxspeed=60` eller `80`, og ingen hadde `foot=no`, `access=no`, `access=private` eller annen eksplisitt fotgjengerbegrensning.
 
-De 10 `secondary`-wayene gjør at 45 tidligere separate baseline-komponenter samles i én større komponent. Det reduserer komponentantallet med 44. Det lengste enkeltobjektet i auditen, OSM way `5051607` på Nerskogsveien, er 3,65 km innenfor bbox-en og berører alene 20 baseline-komponenter. Effekten skyldes derfor ikke ti tilfeldige ekstra veier, men at dagens importpolicy utelater selve fylkesvegen som mange av de allerede importerte stiene og sidevegene er koblet til.
+De 10 `secondary`-wayene gjør at 45 tidligere separate baseline-komponenter samles i én større komponent. Det reduserer komponentantallet med 44. Det lengste enkeltobjektet i auditen, OSM way `5051607` på Nerskogsveien, er 3,65 km innenfor bbox-en og berører alene 20 baseline-komponenter. Effekten skyldtes derfor ikke ti tilfeldige ekstra veier, men at den daværende importpolicyen utelot selve fylkesvegen som mange av de allerede importerte stiene og sidevegene var koblet til.
 
 OSMs norske access-defaults angir gangtilgang for `secondary` når ingen mer spesifikk restriksjon overstyrer dette. Den norske highway-veiledningen bruker dessuten `secondary` for sekundære/øvrige fylkesveger med firesifret vegnummer, som Fv. 6516.
 
