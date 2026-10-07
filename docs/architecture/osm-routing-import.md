@@ -79,7 +79,7 @@ Vanlige forbindelser genereres begge veier. `oneway:foot=yes`, `true` eller `1` 
 
 Dagens eksplisitte highway-liste ble kontrollert mot en utvidet policy fordi et manglende road backbone kan få ordinære OSM-forbindelser til å fremstå som separate komponenter og dermed skape falskt behov for FKB-supplement eller virtuelle forbindelser.
 
-Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T09:52:02Z`, for begge policyene.
+Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T10:05:10Z`, for begge policyene.
 
 | Mål | Dagens policy | Utvidet audit-policy | Endring |
 | --- | ---: | ---: | ---: |
@@ -92,7 +92,7 @@ Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T09:52:02Z`, f
 
 I dette Nerskogen-snapshotet var `secondary` den eneste av de foreslåtte tilleggsklassene som faktisk forekom. Det var nøyaktig 10 slike ways. En separat kontroll av objekttaggene viste at samtlige er segmenter av fylkesvei 6516: Nerskogsveien/Nerskogvegen, Minnillbrua og Grønbrua. Alle er asfalterte, har `maxspeed=60` eller `80`, og ingen hadde `foot=no`, `access=no`, `access=private` eller annen eksplisitt fotgjengerbegrensning.
 
-De 10 `secondary`-wayene samler 44 tidligere separate baseline-komponenter i én større komponent. Effekten skyldes derfor ikke ti tilfeldige ekstra veier, men at dagens importpolicy utelater selve fylkesvegen som mange av de allerede importerte stiene og sidevegene er koblet til.
+De 10 `secondary`-wayene samler 44 tidligere separate baseline-komponenter i én større komponent. Det lengste enkeltobjektet i auditen, OSM way `5051607` på Nerskogsveien, er 3,65 km innenfor bbox-en og berører alene 20 baseline-komponenter. Effekten skyldes derfor ikke ti tilfeldige ekstra veier, men at dagens importpolicy utelater selve fylkesvegen som mange av de allerede importerte stiene og sidevegene er koblet til.
 
 OSMs norske access-defaults angir gangtilgang for `secondary` når ingen mer spesifikk restriksjon overstyrer dette. Den norske highway-veiledningen bruker dessuten `secondary` for sekundære/øvrige fylkesveger med firesifret vegnummer, som Fv. 6516.
 
