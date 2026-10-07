@@ -87,6 +87,22 @@ const corridorComponent = endpointComponents.find((component) =>
 console.log('CURRENT_ROUTE_FKB_COMPONENT_START')
 console.log(JSON.stringify(corridorComponent, null, 2))
 console.log('CURRENT_ROUTE_FKB_COMPONENT_END')
+console.log('CURRENT_ROUTE_FKB_COMPONENT_GEOMETRY_START')
+console.log(
+  JSON.stringify(
+    (corridorComponent?.featureIndexes ?? []).map((index) => {
+      const feature = features.find((candidate) => candidate.index === index)
+      return {
+        sourceId: `fkb-nerskogen-component-${index}`,
+        typeVeg: feature.typeveg,
+        geometry: feature.geometry,
+      }
+    }),
+    null,
+    2,
+  ),
+)
+console.log('CURRENT_ROUTE_FKB_COMPONENT_GEOMETRY_END')
 const corridorPath = findFeaturePath(features, 35, 'end', 6, 'end')
 console.log('CURRENT_ROUTE_FKB_PATH_START')
 console.log(JSON.stringify(corridorPath, null, 2))
