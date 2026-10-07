@@ -5,9 +5,11 @@ import { getRoutingArea } from './routingAreas.ts'
 import { getRawOsmPath } from './routingPaths.ts'
 
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
 ] as const
+
+const OVERPASS_REQUEST_TIMEOUT_MILLISECONDS = 30_000
 
 const areaId = process.argv[2] ?? 'nerskogen'
 const area = getRoutingArea(areaId)
@@ -50,6 +52,7 @@ async function fetchOverpassSnapshot(overpassQuery: string) {
           'User-Agent': 'RuteApp-development-routing-import/0.1',
         },
         body: new URLSearchParams({ data: overpassQuery }),
+        signal: AbortSignal.timeout(OVERPASS_REQUEST_TIMEOUT_MILLISECONDS),
       })
 
       if (!response.ok) {
