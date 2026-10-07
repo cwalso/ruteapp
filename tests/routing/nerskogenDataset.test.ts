@@ -203,6 +203,8 @@ describe('Nerskogen OSM routing dataset', () => {
     expect(result.route.virtualDistanceMeters).toBeLessThanOrEqual(
       virtualConnectionConfig.maxVirtualDistanceMeters,
     )
+    expect(result.route.virtualDistanceMeters).toBeCloseTo(72.873, 3)
+    expect(result.route.totalDistanceMeters).toBeCloseTo(2108.916, 3)
     expect(
       result.route.edges
         .slice(0, firstVirtualEdgeIndex)
