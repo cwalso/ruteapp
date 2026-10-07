@@ -10,3 +10,11 @@ export function getRawOsmPath(areaId: string) {
 export function getRoutingDatasetPath(areaId: string) {
   return resolve(projectRoot, 'public/data/routing', `${areaId}.json`)
 }
+
+export function getOsmHighwayAuditPath(areaId: string) {
+  return resolve(
+    projectRoot,
+    'data/routing/diagnostics',
+    `${areaId}-osm-highway-audit.json`,
+  )
+}
