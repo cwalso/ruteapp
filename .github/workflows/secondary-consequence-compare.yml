@@ -32,6 +32,9 @@ jobs:
       - name: Current dataset
         run: npx vitest run tests/routing/secondaryConsequences.test.ts --reporter=verbose
 
+      - name: Current same-component diagnostics
+        run: npm run routing:same-component-candidates
+
       - name: Dataset before secondary
         shell: bash
         run: |
