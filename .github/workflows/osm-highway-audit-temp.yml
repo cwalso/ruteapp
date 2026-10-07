@@ -1,4 +1,4 @@
-name: Temporary OSM secondary inspection
+name: Temporary OSM highway audit
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  inspect:
+  audit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,5 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Inspect Nerskogen secondary ways
-        run: node --experimental-strip-types scripts/routing/inspectSecondaryWays.temp.ts nerskogen
+      - name: Fetch one audit OSM snapshot
+        run: npm run routing:fetch
+
+      - name: Audit highway coverage from the same snapshot
+        run: npm run routing:audit-highways
