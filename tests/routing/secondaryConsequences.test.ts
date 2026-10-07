@@ -30,8 +30,17 @@ const supplement = JSON.parse(
   readFileSync(supplementPath, 'utf8'),
 ) as FkbOrdinaryRoutingSupplement
 
-describe('secondary backbone consequence diagnostics', () => {
-  it('reports ordinary and virtual topology after the secondary policy change', () => {
+const ornkjellhauganRoutePoints = [
+  { latitude: 62.769041, longitude: 9.554678 },
+  { latitude: 62.7706953, longitude: 9.5515531 },
+] as const
+const ornkjellhauganCandidateEdgeIds = new Set([
+  '896319493:3:f',
+  '303552729:1:f',
+])
+
+describe('secondary backbone consequences', () => {
+  it('reduces ordinary fragmentation before virtual connections are generated', () => {
     const osmGraph = loadRoutingDataset(dataset)
     const osmComponents = findWeaklyConnectedComponents(osmGraph)
     const ordinaryGraph = addFkbOrdinaryRoutingSupplement(osmGraph, supplement)
@@ -41,55 +50,18 @@ describe('secondary backbone consequence diagnostics', () => {
       virtualConnectionConfig,
     )
 
-    console.info('SECONDARY_CONSEQUENCES', JSON.stringify({
-      osmNodes: osmGraph.nodes.size,
-      osmEdges: osmGraph.edges.length,
-      osmComponents: osmComponents.componentIds.length,
-      ordinaryNodes: ordinaryGraph.nodes.size,
-      ordinaryEdges: ordinaryGraph.edges.length,
-      ordinaryComponents: ordinaryComponents.componentIds.length,
-      virtualCandidates: virtualResult.candidates.length,
-      componentsBeforeVirtual: virtualResult.componentCountBefore,
-      componentsAfterVirtual: virtualResult.componentCountAfter,
-      connectableComponents: virtualResult.connectableComponentCount,
-      virtualDistancesMeters: virtualResult.candidates
-        .map(({ distanceMeters }) => Number(distanceMeters.toFixed(3)))
-        .sort((a, b) => a - b),
-      ornkjellhauganCandidate: virtualResult.candidates.find(({ from, to }) => {
-        const edgeIds = new Set([from.edgeId, to.edgeId])
-        return (
-          edgeIds.has('896319493:3:f') &&
-          edgeIds.has('303552729:1:f')
-        )
-      }) ?? null,
-    }))
-
-    expect(osmComponents.componentIds.length).toBe(16)
-    expect(ordinaryComponents.componentIds.length).toBeLessThanOrEqual(16)
-    expect(virtualResult.componentCountBefore).toBe(
-      ordinaryComponents.componentIds.length,
-    )
+    expect(osmComponents.componentIds).toHaveLength(16)
+    expect(ordinaryComponents.componentIds).toHaveLength(16)
+    expect(virtualResult.candidates).toHaveLength(14)
+    expect(virtualResult.componentCountBefore).toBe(16)
+    expect(virtualResult.componentCountAfter).toBe(3)
+    expect(virtualResult.connectableComponentCount).toBe(15)
   })
 
-  it('keeps the two established route cases semantically valid', () => {
+  it('keeps the established FKB corridor ordinary and free of virtual edges', () => {
     const osmGraph = loadRoutingDataset(dataset)
     const ordinaryGraph = addFkbOrdinaryRoutingSupplement(osmGraph, supplement)
-    const virtualResult = createGraphWithVirtualConnections(
-      ordinaryGraph,
-      virtualConnectionConfig,
-    )
-
-    const ornkjellhaugan = routeWaypoints(
-      [
-        ordinaryGraph.nodes.get('8332025315')!,
-        ordinaryGraph.nodes.get('3079323663')!,
-      ],
-      virtualResult.graph,
-      dataset.metadata.bounds,
-      100,
-      virtualResult.snapGraph,
-    )
-    const fkbCorridor = routeWaypoints(
+    const result = routeWaypoints(
       [
         { latitude: 62.79126, longitude: 9.59762 },
         { latitude: 62.79442, longitude: 9.61702 },
@@ -99,42 +71,52 @@ describe('secondary backbone consequence diagnostics', () => {
       100,
     )
 
-    console.info('SECONDARY_ROUTE_CASES', JSON.stringify({
-      ornkjellhaugan:
-        ornkjellhaugan.status === 'routed'
-          ? {
-              distanceMeters: Number(
-                ornkjellhaugan.route.totalDistanceMeters.toFixed(3),
-              ),
-              virtualEdgeCount: ornkjellhaugan.route.virtualEdgeCount,
-              virtualDistanceMeters: Number(
-                ornkjellhaugan.route.virtualDistanceMeters.toFixed(3),
-              ),
-              edgeTypeCounts: ornkjellhaugan.diagnostics.edgeTypeCounts,
-              virtualEdges: ornkjellhaugan.route.edges
-                .filter(({ edgeType }) => edgeType === 'virtual')
-                .map(({ id, distanceMeters }) => ({
-                  id,
-                  distanceMeters: Number(distanceMeters.toFixed(3)),
-                })),
-            }
-          : { status: ornkjellhaugan.status },
-      fkbCorridor:
-        fkbCorridor.status === 'routed'
-          ? {
-              distanceMeters: Number(
-                fkbCorridor.route.totalDistanceMeters.toFixed(3),
-              ),
-              virtualEdgeCount: fkbCorridor.route.virtualEdgeCount,
-              edgeTypeCounts: fkbCorridor.diagnostics.edgeTypeCounts,
-              usesFkb: fkbCorridor.route.edges.some(({ id }) =>
-                id.startsWith('fkb:'),
-              ),
-            }
-          : { status: fkbCorridor.status },
-    }))
+    expect(result.status).toBe('routed')
+    if (result.status !== 'routed') {
+      throw new Error('Expected the FKB corridor case to be routed')
+    }
 
-    expect(ornkjellhaugan.status).toBe('routed')
-    expect(fkbCorridor.status).toBe('routed')
+    expect(result.route.totalDistanceMeters).toBeCloseTo(1476.024, 3)
+    expect(result.route.virtualEdgeCount).toBe(0)
+    expect(
+      result.route.edges.some(({ id }) => id.startsWith('fkb:')),
+    ).toBe(true)
   })
+
+  it('documents the unresolved Ørnkjellhaugan component-gap regression', () => {
+    const osmGraph = loadRoutingDataset(dataset)
+    const ordinaryGraph = addFkbOrdinaryRoutingSupplement(osmGraph, supplement)
+    const virtualResult = createGraphWithVirtualConnections(
+      ordinaryGraph,
+      virtualConnectionConfig,
+    )
+    const originalCandidate = virtualResult.candidates.find(({ from, to }) => {
+      const edgeIds = new Set([from.edgeId, to.edgeId])
+
+      return [...ornkjellhauganCandidateEdgeIds].every((edgeId) =>
+        edgeIds.has(edgeId),
+      )
+    })
+    const result = routeWaypoints(
+      ornkjellhauganRoutePoints,
+      virtualResult.graph,
+      dataset.metadata.bounds,
+      100,
+      virtualResult.snapGraph,
+    )
+
+    expect(originalCandidate).toBeUndefined()
+    expect(result.status).toBe('routed')
+    if (result.status !== 'routed') {
+      throw new Error('Expected Ørnkjellhaugan to remain routable')
+    }
+
+    expect(result.route.virtualEdgeCount).toBe(1)
+    expect(result.route.virtualDistanceMeters).toBeCloseTo(72.873, 3)
+    expect(result.route.totalDistanceMeters).toBeGreaterThan(2_000)
+  })
+
+  it.todo(
+    'restores the local 126.3 m Ørnkjellhaugan component-gap candidate without reintroducing obsolete component-gap noise',
+  )
 })
