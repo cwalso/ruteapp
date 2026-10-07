@@ -32,11 +32,6 @@ console.log(
 )
 
 const { responseText, endpoint } = await fetchOverpassSnapshot(query)
-const responseData = JSON.parse(responseText) as { remark?: string }
-
-if (responseData.remark) {
-  throw new Error(`Overpass returned an error: ${responseData.remark}`)
-}
 
 await mkdir(dirname(rawOsmPath), { recursive: true })
 await writeFile(rawOsmPath, responseText, 'utf8')
@@ -67,8 +62,19 @@ async function fetchOverpassSnapshot(overpassQuery: string) {
         continue
       }
 
+      const responseText = await response.text()
+      const responseData = JSON.parse(responseText) as { remark?: string }
+
+      if (responseData.remark) {
+        lastError = new Error(
+          `Overpass returned an error at ${endpoint}: ${responseData.remark}`,
+        )
+        console.warn(lastError.message)
+        continue
+      }
+
       return {
-        responseText: await response.text(),
+        responseText,
         endpoint,
       }
     } catch (error) {
