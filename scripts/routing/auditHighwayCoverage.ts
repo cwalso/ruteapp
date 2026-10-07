@@ -35,7 +35,10 @@ console.log(
 )
 console.log(`  komponentendring: ${report.delta.componentDelta}`)
 console.log(
-  `  baseline-komponenter faktisk slått sammen: ${report.delta.baselineComponentsJoined}`,
+  `  reduksjon i baseline-komponenter ved sammenslåing: ${report.delta.baselineComponentMergeReduction}`,
+)
+console.log(
+  `  baseline-komponenter som deltar i sammenslåing: ${report.delta.baselineComponentsParticipatingInMerges}`,
 )
 console.log(
   `  utvidede komponenter som samler flere baseline-komponenter: ${report.delta.expandedComponentsJoiningBaseline}`,
