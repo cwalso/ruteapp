@@ -51,11 +51,31 @@ export type HighwayPolicyMetrics = {
   waysByHighway: Record<string, number>
 }
 
+export type AuditAdditionWayStats = {
+  id: number
+  highway: string
+  name: string | null
+  ref: string | null
+  foot: string | null
+  access: string | null
+  sidewalk: string | null
+  sidewalkLeft: string | null
+  sidewalkRight: string | null
+  surface: string | null
+  maxspeed: string | null
+  passingCurrentAccessFilter: boolean
+  footAccessClassification: ReturnType<typeof classifyFootAccess>
+  inBoundsSegments: number
+  inBoundsDistanceMeters: number
+  baselineComponentsTouched: number
+}
+
 export type HighwayCoverageReport = {
   area: string
   bounds: RoutingArea['bounds']
   snapshotTimestamp: string | null
   observedHighways: HighwayClassStats[]
+  auditAdditionWays: AuditAdditionWayStats[]
   currentPolicy: HighwayPolicyMetrics
   expandedAuditPolicy: HighwayPolicyMetrics
   delta: {
@@ -109,6 +129,12 @@ export function analyzeHighwayCoverage(
     bounds: area.bounds,
     snapshotTimestamp: rawData.osm3s?.timestamp_osm_base ?? null,
     observedHighways: summarizeObservedHighways(osmWays),
+    auditAdditionWays: summarizeAuditAdditionWays(
+      osmWays,
+      osmNodes,
+      area,
+      current.componentByNodeId,
+    ),
     currentPolicy: current.metrics,
     expandedAuditPolicy: expanded.metrics,
     delta: {
@@ -126,6 +152,86 @@ export function analyzeHighwayCoverage(
     note:
       'Expanded audit policy is topology analysis only. It does not approve the additional highway classes for final pedestrian routing.',
   }
+}
+
+function summarizeAuditAdditionWays(
+  ways: readonly OsmWay[],
+  nodes: ReadonlyMap<number, OsmNode>,
+  area: RoutingArea,
+  baselineComponentByNodeId: ReadonlyMap<number, number>,
+): AuditAdditionWayStats[] {
+  const result: AuditAdditionWayStats[] = []
+
+  for (const way of ways) {
+    const tags = way.tags ?? {}
+    const highway = tags.highway
+
+    if (!highway || !AUDIT_ADDITIONAL_HIGHWAY_EDGE_TYPES[highway]) {
+      continue
+    }
+
+    let inBoundsSegments = 0
+    let inBoundsDistanceMeters = 0
+    const baselineComponents = new Set<number>()
+
+    for (let index = 1; index < way.nodes.length; index += 1) {
+      const fromNode = getOsmNode(nodes, way.nodes[index - 1], way.id)
+      const toNode = getOsmNode(nodes, way.nodes[index], way.id)
+
+      if (
+        !isInsideBounds(fromNode, area.bounds) ||
+        !isInsideBounds(toNode, area.bounds)
+      ) {
+        continue
+      }
+
+      inBoundsSegments += 1
+      inBoundsDistanceMeters += calculateGeographicDistanceMeters(
+        { longitude: fromNode.lon, latitude: fromNode.lat },
+        { longitude: toNode.lon, latitude: toNode.lat },
+      )
+
+      const fromComponent = baselineComponentByNodeId.get(fromNode.id)
+      const toComponent = baselineComponentByNodeId.get(toNode.id)
+
+      if (fromComponent !== undefined) {
+        baselineComponents.add(fromComponent)
+      }
+      if (toComponent !== undefined) {
+        baselineComponents.add(toComponent)
+      }
+    }
+
+    if (inBoundsSegments === 0) {
+      continue
+    }
+
+    result.push({
+      id: way.id,
+      highway,
+      name: tags.name ?? null,
+      ref: tags.ref ?? null,
+      foot: tags.foot ?? null,
+      access: tags.access ?? null,
+      sidewalk: tags.sidewalk ?? null,
+      sidewalkLeft: tags['sidewalk:left'] ?? null,
+      sidewalkRight: tags['sidewalk:right'] ?? null,
+      surface: tags.surface ?? null,
+      maxspeed: tags.maxspeed ?? null,
+      passingCurrentAccessFilter: isWalkable(tags),
+      footAccessClassification: classifyFootAccess(tags),
+      inBoundsSegments,
+      inBoundsDistanceMeters,
+      baselineComponentsTouched: baselineComponents.size,
+    })
+  }
+
+  return result.sort(
+    (left, right) =>
+      right.baselineComponentsTouched - left.baselineComponentsTouched ||
+      right.inBoundsDistanceMeters - left.inBoundsDistanceMeters ||
+      left.id - right.id,
+  )
 }
 
 function summarizeObservedHighways(
