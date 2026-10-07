@@ -1,0 +1,31 @@
+name: Temporary OSM highway audit
+
+on:
+  push:
+    branches:
+      - routing/osm-highway-audit
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch one broad OSM snapshot
+        run: npm run routing:fetch
+
+      - name: Audit highway coverage from the same snapshot
+        run: npm run routing:audit-highways
