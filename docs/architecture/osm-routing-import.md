@@ -63,9 +63,9 @@ Følgende `highway`-verdier inkluderes:
 | --- | --- |
 | `path`, `footway`, `pedestrian`, `steps` | `path` |
 | `track` | `track` |
-| `service`, `unclassified`, `residential`, `living_street` | `road` |
+| `service`, `unclassified`, `residential`, `living_street`, `secondary` | `road` |
 
-Klasser utenfor den aktive listen kan ligge i det lokale råsnapshotet når de inngår i coverage-auditen, men de tas ikke inn i runtime-datasettet av den grunn. Den utvidede analysepolicyen omfatter foreløpig `primary`, `secondary`, `tertiary`, relevante `*_link`, `bridleway` og `cycleway`. Analysepolicyen er diagnostikk, ikke en beslutning om at alle disse klassene er gangbare eller skal inngå i routing.
+Klasser utenfor den aktive listen kan ligge i det lokale råsnapshotet når de inngår i coverage-auditen, men de tas ikke inn i runtime-datasettet av den grunn. Etter Nerskogen-auditen 7. oktober 2026 er `secondary` flyttet inn i aktiv policy som ordinært `road`-backbone. Den utvidede analysepolicyen omfatter fortsatt `primary`, `tertiary`, relevante `*_link`, `bridleway` og `cycleway`. Analysepolicyen er diagnostikk, ikke en beslutning om at alle disse klassene er gangbare eller skal inngå i routing.
 
 Første access-regel er bevisst liten:
 
@@ -96,7 +96,7 @@ De 10 `secondary`-wayene gjør at 45 tidligere separate baseline-komponenter sam
 
 OSMs norske access-defaults angir gangtilgang for `secondary` når ingen mer spesifikk restriksjon overstyrer dette. Den norske highway-veiledningen bruker dessuten `secondary` for sekundære/øvrige fylkesveger med firesifret vegnummer, som Fv. 6516.
 
-**Konklusjon:** `secondary` bør behandles som ordinært road backbone i den norske fotturmodellen, med de samme eksplisitte access-kontrollene som øvrige road-typer. Dette bør korrigeres før flere OSM-gap forsøkes løst med FKB eller virtuelle forbindelser. Auditen alene endrer ikke det committed runtime-datasettet; policyendring og regenerering gjøres som en egen, testbar leveranse.
+**Konklusjon:** `secondary` behandles nå som ordinært road backbone i den norske fotturmodellen, med de samme eksplisitte access-kontrollene som øvrige road-typer. Policyendringen og regenereringen av Nerskogen-datasettet er gjennomført som en egen testbar leveranse før videre utvidelse med FKB eller virtuelle forbindelser.
 
 Auditen ga ikke empirisk grunnlag i Nerskogen for å ta stilling til `primary`, `tertiary`, `*_link`, `bridleway` eller `cycleway`, siden disse klassene ikke forekom i snapshotet. De beholdes derfor som audit-kandidater og må vurderes mot representative områder før eventuell generell policyendring.
 
