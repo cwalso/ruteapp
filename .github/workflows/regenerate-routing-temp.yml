@@ -1,0 +1,49 @@
+name: Regenerate Nerskogen routing dataset
+
+on:
+  push:
+    branches:
+      - routing/include-secondary-road-backbone
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: ${{ !contains(github.event.head_commit.message, '[routing-dataset]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: routing/include-secondary-road-backbone
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch current OSM snapshot
+        run: npm run routing:fetch
+
+      - name: Build Nerskogen routing dataset
+        run: npm run routing:build
+
+      - name: Commit generated dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/routing/nerskogen.json
+          if git diff --cached --quiet; then
+            echo "No routing dataset changes to commit"
+            exit 0
+          fi
+          git commit -m "Regenerate Nerskogen routing dataset [routing-dataset]"
+          git push origin HEAD:routing/include-secondary-road-backbone
+
+      - name: Verify generated routing dataset
+        run: npm run routing:verify
