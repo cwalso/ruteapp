@@ -84,7 +84,8 @@ export type HighwayCoverageReport = {
     addedPhysicalSegments: number
     addedDistanceMeters: number
     componentDelta: number
-    baselineComponentsJoined: number
+    baselineComponentMergeReduction: number
+    baselineComponentsParticipatingInMerges: number
     expandedComponentsJoiningBaseline: number
   }
   note: string
@@ -425,18 +426,21 @@ function calculateBaselineComponentMerges(
     baselineComponentsByExpanded.set(expandedComponentId, baselineComponents)
   }
 
-  let baselineComponentsJoined = 0
+  let baselineComponentMergeReduction = 0
+  let baselineComponentsParticipatingInMerges = 0
   let expandedComponentsJoiningBaseline = 0
 
   for (const baselineComponents of baselineComponentsByExpanded.values()) {
     if (baselineComponents.size > 1) {
       expandedComponentsJoiningBaseline += 1
-      baselineComponentsJoined += baselineComponents.size - 1
+      baselineComponentMergeReduction += baselineComponents.size - 1
+      baselineComponentsParticipatingInMerges += baselineComponents.size
     }
   }
 
   return {
-    baselineComponentsJoined,
+    baselineComponentMergeReduction,
+    baselineComponentsParticipatingInMerges,
     expandedComponentsJoiningBaseline,
   }
 }
