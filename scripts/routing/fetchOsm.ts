@@ -1,27 +1,24 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import process from 'node:process'
+import { AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES } from './osmWalkingPolicy.ts'
 import { getRoutingArea } from './routingAreas.ts'
 import { getRawOsmPath } from './routingPaths.ts'
 
-const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter'
-const INCLUDED_HIGHWAYS = [
-  'path',
-  'footway',
-  'track',
-  'pedestrian',
-  'steps',
-  'service',
-  'unclassified',
-  'residential',
-  'living_street',
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
 ] as const
+
+const OVERPASS_REQUEST_TIMEOUT_MILLISECONDS = 30_000
 
 const areaId = process.argv[2] ?? 'nerskogen'
 const area = getRoutingArea(areaId)
 const rawOsmPath = getRawOsmPath(area.id)
 const { south, west, north, east } = area.bounds
-const highwayPattern = `^(${INCLUDED_HIGHWAYS.join('|')})$`
+const highwayPattern = `^(${Object.keys(
+  AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES,
+).join('|')})$`
 const query = `[out:json][timeout:120];
 (
   way["highway"~"${highwayPattern}"](${south},${west},${north},${east});
@@ -30,31 +27,66 @@ out body;
 >;
 out skel qt;`
 
-console.log(`Henter OSM-data for ${area.name} fra Overpass...`)
+console.log(
+  `Henter utvidet OSM highway-snapshot for ${area.name} fra Overpass...`,
+)
 
-const response = await fetch(OVERPASS_ENDPOINT, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-    'User-Agent': 'RuteApp-development-routing-import/0.1',
-  },
-  body: new URLSearchParams({ data: query }),
-})
-
-if (!response.ok) {
-  throw new Error(
-    `Overpass request failed: ${response.status} ${response.statusText}`,
-  )
-}
-
-const responseText = await response.text()
-const responseData = JSON.parse(responseText) as { remark?: string }
-
-if (responseData.remark) {
-  throw new Error(`Overpass returned an error: ${responseData.remark}`)
-}
+const { responseText, endpoint } = await fetchOverpassSnapshot(query)
 
 await mkdir(dirname(rawOsmPath), { recursive: true })
 await writeFile(rawOsmPath, responseText, 'utf8')
 
+console.log(`Overpass-instans: ${endpoint}`)
 console.log(`Rådata lagret: ${rawOsmPath}`)
+
+async function fetchOverpassSnapshot(overpassQuery: string) {
+  let lastError: Error | undefined
+
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'User-Agent': 'RuteApp-development-routing-import/0.1',
+        },
+        body: new URLSearchParams({ data: overpassQuery }),
+        signal: AbortSignal.timeout(OVERPASS_REQUEST_TIMEOUT_MILLISECONDS),
+      })
+
+      if (!response.ok) {
+        lastError = new Error(
+          `Overpass request failed at ${endpoint}: ${response.status} ${response.statusText}`,
+        )
+        console.warn(lastError.message)
+        continue
+      }
+
+      const responseText = await response.text()
+      const responseData = JSON.parse(responseText) as { remark?: string }
+
+      if (responseData.remark) {
+        lastError = new Error(
+          `Overpass returned an error at ${endpoint}: ${responseData.remark}`,
+        )
+        console.warn(lastError.message)
+        continue
+      }
+
+      return {
+        responseText,
+        endpoint,
+      }
+    } catch (error) {
+      lastError =
+        error instanceof Error
+          ? error
+          : new Error(`Unknown Overpass error at ${endpoint}`)
+      console.warn(
+        `Overpass request failed at ${endpoint}: ${lastError.message}`,
+      )
+    }
+  }
+
+  throw lastError ?? new Error('All Overpass endpoints failed')
+}

@@ -18,6 +18,11 @@ import {
   getRawOsmPath,
   getRoutingDatasetPath,
 } from './routingPaths.ts'
+import {
+  CURRENT_HIGHWAY_EDGE_TYPES,
+  getFootDirection,
+  isWalkable,
+} from './osmWalkingPolicy.ts'
 
 type OsmNode = {
   type: 'node'
@@ -37,22 +42,6 @@ type OverpassResponse = {
   elements: Array<OsmNode | OsmWay>
 }
 
-const HIGHWAY_EDGE_TYPES: Readonly<Record<string, EdgeType>> = {
-  path: 'path',
-  footway: 'path',
-  pedestrian: 'path',
-  steps: 'path',
-  track: 'track',
-  service: 'road',
-  unclassified: 'road',
-  residential: 'road',
-  living_street: 'road',
-}
-
-const RESTRICTED_ACCESS = new Set(['no', 'private'])
-const EXPLICIT_FOOT_ACCESS = new Set(['yes', 'designated', 'permissive'])
-const FORWARD_FOOT_ONEWAY = new Set(['yes', 'true', '1'])
-
 const areaId = process.argv[2] ?? 'nerskogen'
 const area = getRoutingArea(areaId)
 const rawOsmPath = getRawOsmPath(area.id)
@@ -66,9 +55,13 @@ const osmNodes = new Map(
 const osmWays = rawData.elements.filter(
   (element): element is OsmWay => element.type === 'way',
 )
+const policyWays = osmWays.filter((way) => {
+  const highway = way.tags?.highway
+  return Boolean(highway && CURRENT_HIGHWAY_EDGE_TYPES[highway])
+})
 
 let excludedForAccess = 0
-const walkableWays = osmWays.filter((way) => {
+const walkableWays = policyWays.filter((way) => {
   if (!isWalkable(way.tags ?? {})) {
     excludedForAccess += 1
     return false
@@ -83,7 +76,8 @@ const includedWayIds = new Set<number>()
 
 for (const way of walkableWays) {
   const tags = way.tags ?? {}
-  const edgeType = HIGHWAY_EDGE_TYPES[tags.highway]
+  const highway = tags.highway
+  const edgeType = highway ? CURRENT_HIGHWAY_EDGE_TYPES[highway] : undefined
 
   if (!edgeType) {
     continue
@@ -162,49 +156,21 @@ const componentCount = countWeaklyConnectedComponents(
 const byteSize = Buffer.byteLength(serializedDataset)
 
 console.log(`Routingdata generert for ${area.name}`)
-console.log(`OSM ways lest: ${osmWays.length}`)
+console.log(`OSM highway-ways lest: ${osmWays.length}`)
+console.log(`Ways i aktiv highway-policy: ${policyWays.length}`)
 console.log(`Ways inkludert: ${includedWayIds.size}`)
 console.log(`Routing nodes: ${dataset.nodes.length}`)
 console.log(`Routing edges: ${dataset.edges.length}`)
 console.log(`Path-edges: ${edgeTypeCounts.path}`)
 console.log(`Track-edges: ${edgeTypeCounts.track}`)
 console.log(`Road-edges: ${edgeTypeCounts.road}`)
-console.log(`Ways ekskludert på grunn av adgang: ${excludedForAccess}`)
+console.log(`Policy-ways ekskludert på grunn av adgang: ${excludedForAccess}`)
 console.log(
-  `Gangbare ways uten segment innenfor bbox: ${walkableWays.length - includedWayIds.size}`,
+  `Gangbare policy-ways uten segment innenfor bbox: ${walkableWays.length - includedWayIds.size}`,
 )
 console.log(`Sammenhengende komponenter: ${componentCount}`)
 console.log(`JSON-størrelse: ${formatByteSize(byteSize)}`)
 console.log(`Dataset lagret: ${routingDatasetPath}`)
-
-function isWalkable(tags: Record<string, string>) {
-  const footAccess = tags.foot?.toLowerCase()
-  const generalAccess = tags.access?.toLowerCase()
-
-  if (footAccess && RESTRICTED_ACCESS.has(footAccess)) {
-    return false
-  }
-
-  return !(
-    generalAccess &&
-    RESTRICTED_ACCESS.has(generalAccess) &&
-    (!footAccess || !EXPLICIT_FOOT_ACCESS.has(footAccess))
-  )
-}
-
-function getFootDirection(onewayFoot: string | undefined) {
-  const normalizedValue = onewayFoot?.toLowerCase()
-
-  if (normalizedValue === '-1') {
-    return 'reverse' as const
-  }
-
-  if (normalizedValue && FORWARD_FOOT_ONEWAY.has(normalizedValue)) {
-    return 'forward' as const
-  }
-
-  return 'both' as const
-}
 
 function isInsideBounds(
   node: OsmNode,
