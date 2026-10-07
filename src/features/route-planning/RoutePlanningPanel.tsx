@@ -339,7 +339,7 @@ function getPlanningInstruction(pointCount: number) {
     return 'Startpunkt valgt. Klikk i kartet for å velge mål.'
   }
 
-  return 'Klikk i kartet for å legge til via-punkt. Dra markørene for å flytte. Fjern punkter i listen under.'
+  return 'Klikk i kartet for å legge til mellompunkt. Mål B beholdes. Dra markørene for å flytte.'
 }
 
 function getPointName(kind: 'start' | 'via' | 'end', label: string) {
