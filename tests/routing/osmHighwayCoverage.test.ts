@@ -51,7 +51,8 @@ describe('OSM highway coverage audit', () => {
     expect(report.expandedAuditPolicy.ways).toBe(3)
     expect(report.expandedAuditPolicy.components).toBe(1)
     expect(report.delta.addedWays).toBe(1)
-    expect(report.delta.baselineComponentsJoined).toBe(1)
+    expect(report.delta.baselineComponentMergeReduction).toBe(1)
+    expect(report.delta.baselineComponentsParticipatingInMerges).toBe(2)
     expect(report.delta.expandedComponentsJoiningBaseline).toBe(1)
     expect(report.auditAdditionWays).toEqual(
       expect.arrayContaining([
