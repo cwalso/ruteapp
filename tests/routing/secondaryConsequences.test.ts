@@ -55,6 +55,13 @@ describe('secondary backbone consequence diagnostics', () => {
       virtualDistancesMeters: virtualResult.candidates
         .map(({ distanceMeters }) => Number(distanceMeters.toFixed(3)))
         .sort((a, b) => a - b),
+      ornkjellhauganCandidate: virtualResult.candidates.find(({ from, to }) => {
+        const edgeIds = new Set([from.edgeId, to.edgeId])
+        return (
+          edgeIds.has('896319493:3:f') &&
+          edgeIds.has('303552729:1:f')
+        )
+      }) ?? null,
     }))
 
     expect(osmComponents.componentIds.length).toBe(16)
@@ -104,6 +111,12 @@ describe('secondary backbone consequence diagnostics', () => {
                 ornkjellhaugan.route.virtualDistanceMeters.toFixed(3),
               ),
               edgeTypeCounts: ornkjellhaugan.diagnostics.edgeTypeCounts,
+              virtualEdges: ornkjellhaugan.route.edges
+                .filter(({ edgeType }) => edgeType === 'virtual')
+                .map(({ id, distanceMeters }) => ({
+                  id,
+                  distanceMeters: Number(distanceMeters.toFixed(3)),
+                })),
             }
           : { status: ornkjellhaugan.status },
       fkbCorridor:
