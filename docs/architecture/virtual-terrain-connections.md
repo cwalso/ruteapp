@@ -83,37 +83,39 @@ Den vurderer ikke:
 
 Den siste begrensningen betyr at produksjonsgeneratoren ikke genererer virtuelle snarveier mellom to deler av samme sammenhengende OSM-komponent. Dette reduserer kandidatmengden og hindrer at den første geometriske modellen lager svært mange snarveier.
 
-En separat diagnostikkspike analyserer slike mulige [same-component shortcuts](same-component-shortcuts.md) ved å sammenligne direkte geografisk avstand med ordinær nettverksavstand. Generatoren og hele kandidatsettet påvirker ikke vanlig routing eller den eksisterende component-gap-generatoren. Et development-only eksperiment kan materialisere nøyaktig fire manuelt godkjente, preberegnede kandidater når en toggle slås på. De bruker samme `virtual`-semantikk og kostnadsfaktor som component-gap-forbindelser, men en separat allowlist og fixture; ingen automatisk produksjonspolicy er besluttet.
+En separat diagnostikkspike analyserer slike mulige [same-component shortcuts](same-component-shortcuts.md) ved å sammenligne direkte geografisk avstand med ordinær nettverksavstand. Generatoren og hele kandidatsettet påvirker ikke vanlig routing eller den eksisterende component-gap-generatoren. Et kontrollert allowlist-eksperiment kan materialisere nøyaktig fire manuelt godkjente, preberegnede kandidater. Produksjonsrutingen bruker den godkjente shortcut-grafen, mens development-toggle brukes til å sammenligne baseline og godkjente shortcuts. De bruker samme `virtual`-semantikk og kostnadsfaktor som component-gap-forbindelser, men en separat allowlist og fixture; ingen automatisk produksjonspolicy er besluttet.
 
-Den ekstra development-grafen bygges oppå dagens derived graph uten å mutere ordinary-grafen eller baseline-grafen. Kandidatens full-ID og underliggende edge-/punktdata er autoritative. Eksisterende splitting brukes også når koblingspunktet ligger inne på en edge, og shortcut-edges holdes utenfor snap-grafen og det ordinære routable map layer. Når toggle er av, brukes nøyaktig dagens baseline-graf.
+Den ekstra development-grafen bygges oppå dagens derived graph uten å mutere ordinary-grafen eller baseline-grafen. Kandidatens full-ID og underliggende edge-/punktdata er autoritative. Eksisterende splitting brukes også når koblingspunktet ligger inne på en edge, og shortcut-edges holdes utenfor snap-grafen og det ordinære routable map layer. I development mode bruker toggle av baseline-grafen; produksjonsbygget bruker den godkjente shortcut-grafen som standard.
 
 ## Nerskogen-diagnose
 
-`npm run routing:virtual-candidates` kjører generatoren deterministisk mot det committed Nerskogen-datasettet. Med gjeldende datasett og konfigurasjon rapporterer den:
+`npm run routing:virtual-candidates` kjører generatoren deterministisk mot det committed Nerskogen-datasettet. Etter at `secondary` ble tatt inn som ordinært road-backbone 7. oktober 2026, rapporterer gjeldende graf:
 
-- 57 ordinære komponenter før generering
-- 91 dedupliserte kandidater
-- 27 kandidater i 0–50 meter
-- 22 kandidater i 50–100 meter
-- 19 kandidater i 100–150 meter
-- 23 kandidater i 150–200 meter
-- 52 komponenter med minst én kandidat
-- 7 svake komponenter etter at kandidatene er lagt til
-- omtrent 0,93 sekunder til kandidatgenerering i Node-diagnosen
+- 16 ordinære komponenter før generering
+- 14 dedupliserte component-gap-kandidater
+- 8 kandidater i 0–50 meter
+- 3 kandidater i 50–100 meter
+- 2 kandidater i 100–150 meter
+- 1 kandidat i 150–200 meter
+- 15 komponenter med minst én kandidat
+- 3 svake komponenter etter at kandidatene er lagt til
 
-Tallene beskriver bare grafens topologi og geometriske nærhet. De 91 kandidatene er ikke gjennomgått som sikre, tillatte eller fysisk farbare terrengforbindelser.
+Før `secondary` ble aktivert hadde samme område 57 ordinære komponenter, 91 kandidater, 52 komponenter med minst én kandidat og 7 komponenter etter materialisering. Policyendringen fjernet dermed 77 component-gap-kandidater som i stor grad skyldtes et manglende ordinært veinett i importen. Tallene beskriver fortsatt bare grafens topologi og geometriske nærhet; kandidatene er ikke dermed validert som sikre, tillatte eller fysisk farbare terrengforbindelser.
 
-## Golden case: Ørnkjellhaugan
+## Beskyttet case: Ørnkjellhaugan – kjent regresjon etter `secondary`
 
-Ørnkjellhaugan beholdes som et deterministisk golden case for sekvensen ordinært nett → virtuell terrengforbindelse → ordinært nett. Testen har ingen avhengighet til live tjenester og bruker det committed Nerskogen-datasettet:
+Før `secondary` ble aktivert var Ørnkjellhaugan et deterministisk golden case for sekvensen ordinært nett → virtuell terrengforbindelse → ordinært nett:
 
 - startnode `8332025315`: longitude `9.554678`, latitude `62.769041`
 - målnode `3079323663`: longitude `9.5515531`, latitude `62.7706953`
-- kandidat `VC-0963FF06`
 - ordinær edge A: `896319493:3:f`, `road`
 - ordinær edge B: `303552729:1:f`, `track`
 - virtuell distanse: `126.341823` meter
 - total rutedistanse: omtrent `244,4` meter
 - valgt edge-sekvens: `road → virtual → track`
 
-Dette caset demonstrerer bare at graf- og rutemodellen kan velge en eksplisitt virtuell edge mellom ordinære segmenter. Det validerer ikke kandidatens terreng, barrierer eller sikkerhet.
+Etter policyendringen ligger de to sidene fortsatt i forskjellige ordinary components, nå `10004160051` og `3079323657`. Caset er derfor fortsatt et component-gap og skal ikke flyttes til same-component-mekanismen.
+
+Regresjonen skyldes i stedet regelen om at generatoren bare beholder én, globalt korteste kandidat per komponentpar. Når `secondary` gjør road-komponenten mye større, finnes en annen kobling på `72.873` meter mellom de samme to komponentene. Denne kandidaten fortrenger den lokale Ørnkjellhaugan-koblingen på `126.342` meter. Dagens rute mellom de to beskyttede punktene blir derfor omtrent `2 108,916` meter og bruker én virtuell forbindelse på `72.873` meter et annet sted i komponentparet.
+
+Konsekvenskontrollen er låst i testene, sammen med en eksplisitt TODO for å gjenopprette den lokale forbindelsen. En senere retting må endre component-gap-kandidatutvalget slik at geografisk ulike, nyttige forbindelser mellom samme store komponentpar kan bevares uten å gjeninnføre de 77 obsolete kandidatene som `secondary` fjernet.
