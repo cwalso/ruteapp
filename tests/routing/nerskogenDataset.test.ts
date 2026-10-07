@@ -220,6 +220,10 @@ describe('Nerskogen OSM routing dataset', () => {
     )
   })
 
+  it.todo(
+    'restores the local 126.3 m Ørnkjellhaugan component-gap connection as the selected route between the protected points',
+  )
+
   it('uses the secondary road backbone to shorten the local ordinary route south of Ørnkjellhaugen', () => {
     const result = routeWaypoints(
       [
