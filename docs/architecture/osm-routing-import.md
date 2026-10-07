@@ -20,6 +20,8 @@ RoutingGraph → A*
 
 Overpass brukes bare av utviklerkommandoen `routing:fetch`. React-applikasjonen og routingkjernen kontakter ikke Overpass ved vanlig bruk. Den genererte JSON-filen er den statiske artefakten nettleseren laster fra `/data/routing/nerskogen.json`.
 
+Råimporten og den aktive routingpolicyen er nå eksplisitt skilt. `routing:fetch` henter unionen av dagens aktive highway-klasser og klassene som analyseres i coverage-auditen til samme Git-ignorerte råsnapshot. `routing:build` filtrerer deretter med den aktive policyen. Dermed kan to importpolicyer sammenlignes mot nøyaktig samme OSM-snapshot uten at endringer i OSM mellom to hentinger forveksles med policy-effekt.
+
 ## Testområde
 
 Områder konfigureres i `scripts/routing/routingAreas.ts`. Første område er Nerskogen:
@@ -43,11 +45,13 @@ Overpass returnerer hele ways som berører en bbox. Preprocessoren beholder derf
 npm run routing:fetch
 npm run routing:build
 npm run routing:verify
+npm run routing:audit-highways
 ```
 
-- `routing:fetch` henter kandidat-ways og tilhørende OSM-noder til en regenererbar, Git-ignorert råfil.
-- `routing:build` filtrerer og transformerer rådata til `public/data/routing/nerskogen.json`, og skriver ut en datakvalitetsrapport.
+- `routing:fetch` henter aktive og audit-relevante highway-klasser samt tilhørende OSM-noder til én regenererbar, Git-ignorert råfil.
+- `routing:build` filtrerer råsnapshotet med den aktive highway-policyen og transformerer resultatet til `public/data/routing/nerskogen.json`.
 - `routing:verify` laster det genererte datasettet, validerer edge-invariantene og kjører eksisterende A* over en automatisk valgt fler-edge-rute.
+- `routing:audit-highways` sammenligner dagens policy med en eksplisitt utvidet analysepolicy fra samme råsnapshot. Rapporten skrives til `data/routing/diagnostics/` og endrer ikke runtime-datasettet.
 
 Scriptfilene kjøres med Node sin innebygde TypeScript type-stripping og er verifisert med Node 24. Det er ikke lagt til en egen script-runner eller GIS-avhengighet.
 
@@ -61,7 +65,7 @@ Følgende `highway`-verdier inkluderes:
 | `track` | `track` |
 | `service`, `unclassified`, `residential`, `living_street` | `road` |
 
-Motorvei og andre highway-typer utenfor denne eksplisitte listen hentes ikke.
+Klasser utenfor den aktive listen kan ligge i det lokale råsnapshotet når de inngår i coverage-auditen, men de tas ikke inn i runtime-datasettet av den grunn. Den utvidede analysepolicyen omfatter foreløpig `primary`, `secondary`, `tertiary`, relevante `*_link`, `bridleway` og `cycleway`. Analysepolicyen er diagnostikk, ikke en beslutning om at alle disse klassene er gangbare eller skal inngå i routing.
 
 Første access-regel er bevisst liten:
 
@@ -70,6 +74,36 @@ Første access-regel er bevisst liten:
 - Andre access-verdier tolkes ikke utover dette i første versjon.
 
 Vanlige forbindelser genereres begge veier. `oneway:foot=yes`, `true` eller `1` gir bare OSM-retningen, mens `oneway:foot=-1` gir motsatt retning. Generell `oneway` for kjøretøy brukes ikke som fotgjengerregel.
+
+## Highway coverage-audit 7. oktober 2026
+
+Dagens eksplisitte highway-liste ble kontrollert mot en utvidet policy fordi et manglende road backbone kan få ordinære OSM-forbindelser til å fremstå som separate komponenter og dermed skape falskt behov for FKB-supplement eller virtuelle forbindelser.
+
+Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T09:52:02Z`, for begge policyene.
+
+| Mål | Dagens policy | Utvidet audit-policy | Endring |
+| --- | ---: | ---: | ---: |
+| Ways | 1 023 | 1 033 | +10 |
+| Noder | 14 737 | 15 147 | +410 |
+| Fysiske segmenter | 14 820 | 15 301 | +481 |
+| Samlet fysisk lengde | 186,40 km | 199,47 km | +13,07 km |
+| Svakt sammenhengende komponenter | 60 | 16 | -44 |
+| Noder i største komponent | 8 948 | 13 764 | +4 816 |
+
+I dette Nerskogen-snapshotet var `secondary` den eneste av de foreslåtte tilleggsklassene som faktisk forekom. Det var nøyaktig 10 slike ways. En separat kontroll av objekttaggene viste at samtlige er segmenter av fylkesvei 6516: Nerskogsveien/Nerskogvegen, Minnillbrua og Grønbrua. Alle er asfalterte, har `maxspeed=60` eller `80`, og ingen hadde `foot=no`, `access=no`, `access=private` eller annen eksplisitt fotgjengerbegrensning.
+
+De 10 `secondary`-wayene samler 44 tidligere separate baseline-komponenter i én større komponent. Effekten skyldes derfor ikke ti tilfeldige ekstra veier, men at dagens importpolicy utelater selve fylkesvegen som mange av de allerede importerte stiene og sidevegene er koblet til.
+
+OSMs norske access-defaults angir gangtilgang for `secondary` når ingen mer spesifikk restriksjon overstyrer dette. Den norske highway-veiledningen bruker dessuten `secondary` for sekundære/øvrige fylkesveger med firesifret vegnummer, som Fv. 6516.
+
+**Konklusjon:** `secondary` bør behandles som ordinært road backbone i den norske fotturmodellen, med de samme eksplisitte access-kontrollene som øvrige road-typer. Dette bør korrigeres før flere OSM-gap forsøkes løst med FKB eller virtuelle forbindelser. Auditen alene endrer ikke det committed runtime-datasettet; policyendring og regenerering gjøres som en egen, testbar leveranse.
+
+Auditen ga ikke empirisk grunnlag i Nerskogen for å ta stilling til `primary`, `tertiary`, `*_link`, `bridleway` eller `cycleway`, siden disse klassene ikke forekom i snapshotet. De beholdes derfor som audit-kandidater og må vurderes mot representative områder før eventuell generell policyendring.
+
+Referanser for OSM-tagging og implisitt tilgang:
+
+- [OSM default access restrictions – Norway](https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions#Norway)
+- [OSM Norway/Highways](https://wiki.openstreetmap.org/wiki/Norway/Highways)
 
 ## Transformasjon og format
 
