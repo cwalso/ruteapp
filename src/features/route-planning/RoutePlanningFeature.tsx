@@ -16,7 +16,10 @@ import type { RoutePoint, RoutePointPosition } from '../../types/routePoint'
 import RoutePlanningPanel, {
   type RoutePlanningRoutingState,
 } from './RoutePlanningPanel'
-import { calculateRouteDistanceMeters } from './routePlanning'
+import {
+  calculateRouteDistanceMeters,
+  insertRoutePointBeforeEnd,
+} from './routePlanning'
 import { routePlanningConfig } from './routePlanningConfig'
 import { useRouteElevation } from './useRouteElevation'
 
@@ -52,10 +55,12 @@ function RoutePlanningFeature() {
     const pointId = `route-point-${nextPointIdRef.current}`
     nextPointIdRef.current += 1
 
-    setRoutePoints((currentPoints) => [
-      ...currentPoints,
-      { id: pointId, ...position },
-    ])
+    setRoutePoints((currentPoints) =>
+      insertRoutePointBeforeEnd(currentPoints, {
+        id: pointId,
+        ...position,
+      }),
+    )
   }, [])
 
   const handleMovePoint = useCallback(
