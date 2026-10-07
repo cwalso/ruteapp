@@ -203,6 +203,44 @@ describe('routeWaypoints with temporary edge splits', () => {
     }
   })
 
+  it('uses the shortest route through a via point even when that requires backtracking', () => {
+    const spurNode = node('spur', 9.61, 62.785)
+    const branchGraph = createRoutingGraph(
+      [nodes.a, nodes.b, nodes.c, spurNode],
+      [
+        ...bidirectionalEdges('branch-a-b', nodes.a, nodes.b),
+        ...bidirectionalEdges('branch-b-c', nodes.b, nodes.c),
+        ...bidirectionalEdges('branch-b-spur', nodes.b, spurNode),
+      ],
+    )
+
+    const result = routeWaypoints(
+      [nodes.a, spurNode, nodes.c],
+      branchGraph,
+      bounds,
+      100,
+    )
+
+    expect(result.status).toBe('routed')
+
+    if (result.status === 'routed') {
+      expect(result.route.nodeIds).toEqual(['a', 'b', 'spur', 'b', 'c'])
+      expect(result.route.edges.map(({ id }) => id)).toEqual([
+        'branch-a-b:f',
+        'branch-b-spur:f',
+        'branch-b-spur:r',
+        'branch-b-c:f',
+      ])
+
+      const expectedDistance =
+        calculateGeographicDistanceMeters(nodes.a, nodes.b) +
+        2 * calculateGeographicDistanceMeters(nodes.b, spurNode) +
+        calculateGeographicDistanceMeters(nodes.b, nodes.c)
+
+      expect(result.route.totalDistanceMeters).toBeCloseTo(expectedDistance, 3)
+    }
+  })
+
   it('routes exact graph nodes through multiple edges', () => {
     const result = routeWaypoints([nodes.a, nodes.c], graph, bounds, 100)
 
