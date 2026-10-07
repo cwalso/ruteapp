@@ -77,7 +77,7 @@ describe('Nerskogen FKB ordinary routing corridor', () => {
         id.startsWith('fkb:') || id.startsWith('fkb-conflation:'),
     )
 
-    expect(supplement.features).toHaveLength(11)
+    expect(supplement.features).toHaveLength(55)
     expect(addedEdges.length).toBeGreaterThan(0)
     expect(
       addedEdges.every(({ edgeType }) =>
