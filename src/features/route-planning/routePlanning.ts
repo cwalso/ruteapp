@@ -21,6 +21,21 @@ export function getRoutePointRole(
   return { kind: 'via', label: String(index) }
 }
 
+export function insertRoutePointBeforeEnd(
+  routePoints: readonly RoutePoint[],
+  routePoint: RoutePoint,
+) {
+  if (routePoints.length < 2) {
+    return [...routePoints, routePoint]
+  }
+
+  return [
+    ...routePoints.slice(0, -1),
+    routePoint,
+    routePoints[routePoints.length - 1],
+  ]
+}
+
 export function calculateRouteDistanceMeters(
   routePoints: readonly RoutePoint[],
 ) {
