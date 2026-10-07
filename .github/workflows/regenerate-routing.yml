@@ -32,11 +32,20 @@ jobs:
         run: npm run routing:build
 
       - name: Verify routing dataset
-        run: npm run routing:verify
+        shell: bash
+        run: |
+          set +e
+          npm run routing:verify 2>&1 | tee routing-verify.log
+          status=${PIPESTATUS[0]}
+          echo "VERIFY_STATUS=${status}" >> "${GITHUB_ENV}"
+          exit ${status}
 
-      - name: Upload regenerated dataset
+      - name: Upload regenerated dataset and verification log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nerskogen-routing-dataset
-          path: public/data/routing/nerskogen.json
+          path: |
+            public/data/routing/nerskogen.json
+            routing-verify.log
           if-no-files-found: error
