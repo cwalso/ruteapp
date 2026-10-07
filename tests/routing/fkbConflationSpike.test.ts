@@ -36,7 +36,7 @@ const sourceObjects = JSON.parse(
 ) as FkbSpikeSourceObject[]
 
 describe('isolated Nerskogen OSM + FKB conflation spike', () => {
-  it('keeps the pure OSM detour and produces a local hybrid route', () => {
+  it('keeps the improved pure OSM route and produces a shorter local hybrid route', () => {
     const osmGraph = loadRoutingDataset(dataset)
     const originalNodeCount = osmGraph.nodes.size
     const originalEdgeCount = osmGraph.edges.length
@@ -65,7 +65,7 @@ describe('isolated Nerskogen OSM + FKB conflation spike', () => {
 
     if (pureOsmResult.status === 'routed' && hybridResult.status === 'routed') {
       expect(pureOsmResult.route.totalDistanceMeters).toBeCloseTo(
-        5049.273725,
+        2911.676922,
         5,
       )
       expect(hybridResult.route.totalDistanceMeters).toBeCloseTo(
@@ -74,7 +74,7 @@ describe('isolated Nerskogen OSM + FKB conflation spike', () => {
       )
       expect(hybridResult.route.edges).toHaveLength(204)
       expect(hybridResult.route.totalDistanceMeters).toBeLessThan(
-        pureOsmResult.route.totalDistanceMeters / 5,
+        pureOsmResult.route.totalDistanceMeters / 3,
       )
       expect(
         countRouteEdgesBySource(
