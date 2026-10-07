@@ -53,6 +53,22 @@ describe('OSM highway coverage audit', () => {
     expect(report.delta.addedWays).toBe(1)
     expect(report.delta.baselineComponentsJoined).toBe(1)
     expect(report.delta.expandedComponentsJoiningBaseline).toBe(1)
+    expect(report.auditAdditionWays).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 102,
+          highway: 'tertiary',
+          passingCurrentAccessFilter: true,
+          baselineComponentsTouched: 2,
+        }),
+        expect.objectContaining({
+          id: 103,
+          highway: 'cycleway',
+          passingCurrentAccessFilter: false,
+          footAccessClassification: 'explicit-restricted',
+        }),
+      ]),
+    )
 
     const tertiary = report.observedHighways.find(
       ({ highway }) => highway === 'tertiary',
