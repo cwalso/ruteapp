@@ -5,32 +5,22 @@ import { getRoutingArea } from './routingAreas.ts'
 import { getRawOsmPath } from './routingPaths.ts'
 
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter'
-const INCLUDED_HIGHWAYS = [
-  'path',
-  'footway',
-  'track',
-  'pedestrian',
-  'steps',
-  'service',
-  'unclassified',
-  'residential',
-  'living_street',
-] as const
 
 const areaId = process.argv[2] ?? 'nerskogen'
 const area = getRoutingArea(areaId)
 const rawOsmPath = getRawOsmPath(area.id)
 const { south, west, north, east } = area.bounds
-const highwayPattern = `^(${INCLUDED_HIGHWAYS.join('|')})$`
 const query = `[out:json][timeout:120];
 (
-  way["highway"~"${highwayPattern}"](${south},${west},${north},${east});
+  way["highway"](${south},${west},${north},${east});
 );
 out body;
 >;
 out skel qt;`
 
-console.log(`Henter OSM-data for ${area.name} fra Overpass...`)
+console.log(
+  `Henter bredt OSM highway-snapshot for ${area.name} fra Overpass...`,
+)
 
 const response = await fetch(OVERPASS_ENDPOINT, {
   method: 'POST',
