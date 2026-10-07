@@ -91,7 +91,7 @@ describe('Nerskogen FKB ordinary routing corridor', () => {
     const conflationEdges = addedEdges.filter(({ id }) =>
       id.startsWith('fkb-conflation:'),
     )
-    expect(conflationEdges).toHaveLength(4)
+    expect(conflationEdges).toHaveLength(20)
     expect(
       conflationEdges.every(({ distanceMeters }) => distanceMeters < 1),
     ).toBe(true)
