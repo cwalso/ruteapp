@@ -1,0 +1,42 @@
+name: Regenerate Nerskogen routing dataset
+
+on:
+  push:
+    branches:
+      - routing/include-secondary-backbone
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch OSM snapshot
+        run: npm run routing:fetch
+
+      - name: Build routing dataset
+        run: npm run routing:build
+
+      - name: Verify routing dataset
+        run: npm run routing:verify
+
+      - name: Upload regenerated dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: nerskogen-routing-dataset
+          path: public/data/routing/nerskogen.json
+          if-no-files-found: error
