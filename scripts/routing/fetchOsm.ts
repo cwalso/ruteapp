@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import process from 'node:process'
 import { getRoutingArea } from './routingAreas.ts'
+import { AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES } from './osmWalkingPolicy.ts'
 import { getRawOsmPath } from './routingPaths.ts'
 
 const OVERPASS_ENDPOINTS = [
@@ -15,16 +16,34 @@ const areaId = process.argv[2] ?? 'nerskogen'
 const area = getRoutingArea(areaId)
 const rawOsmPath = getRawOsmPath(area.id)
 const { south, west, north, east } = area.bounds
+const highwayPattern = `^(${Object.keys(AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES).join('|')})import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
+import process from 'node:process'
+import { getRoutingArea } from './routingAreas.ts'
+import { AUDIT_EXPANDED_HIGHWAY_EDGE_TYPES } from './osmWalkingPolicy.ts'
+import { getRawOsmPath } from './routingPaths.ts'
+
+const OVERPASS_ENDPOINTS = [
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
+] as const
+
+const OVERPASS_REQUEST_TIMEOUT_MILLISECONDS = 30_000
+
+const areaId = process.argv[2] ?? 'nerskogen'
+const area = getRoutingArea(areaId)
+const rawOsmPath = getRawOsmPath(area.id)
+
 const query = `[out:json][timeout:120];
 (
-  way["highway"](${south},${west},${north},${east});
+  way["highway"~"${highwayPattern}"](${south},${west},${north},${east});
 );
 out body;
 >;
 out skel qt;`
 
 console.log(
-  `Henter bredt OSM highway-snapshot for ${area.name} fra Overpass...`,
+  `Henter utvidet OSM highway-snapshot for ${area.name} fra Overpass...`,
 )
 
 const { responseText, endpoint } = await fetchOverpassSnapshot(query)
