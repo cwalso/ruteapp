@@ -50,6 +50,54 @@ const CONFLATIONS: readonly ConflationDefinition[] = [
     edgeType: 'path',
     physicalNodeIds: ['3194355266', '3194355267'],
   },
+  {
+    pointIndex: 2,
+    coordinate: [9.60367195, 62.790589032],
+    edgeType: 'road',
+    physicalNodeIds: ['6925364879', '6925364880'],
+  },
+  {
+    pointIndex: 3,
+    coordinate: [9.594461254, 62.796360783],
+    edgeType: 'road',
+    physicalNodeIds: ['6925388482', '6925388483'],
+  },
+  {
+    pointIndex: 4,
+    coordinate: [9.62013958, 62.794450429],
+    edgeType: 'road',
+    physicalNodeIds: ['3194355263', '6925389286'],
+  },
+  {
+    pointIndex: 5,
+    coordinate: [9.595635215, 62.795109177],
+    edgeType: 'road',
+    physicalNodeIds: ['6925388907', '6925388908'],
+  },
+  {
+    pointIndex: 6,
+    coordinate: [9.595529395, 62.793135242],
+    edgeType: 'road',
+    physicalNodeIds: ['6925364924', '6925364925'],
+  },
+  {
+    pointIndex: 7,
+    coordinate: [9.608456515, 62.796564644],
+    edgeType: 'path',
+    physicalNodeIds: ['3194355286', '3194355285'],
+  },
+  {
+    pointIndex: 8,
+    coordinate: [9.611204011, 62.795893551],
+    edgeType: 'path',
+    physicalNodeIds: ['3194355275', '3194355272'],
+  },
+  {
+    pointIndex: 9,
+    coordinate: [9.6072286, 62.796976554],
+    edgeType: 'path',
+    physicalNodeIds: ['3194355296', '3194355290'],
+  },
 ]
 
 export function addFkbOrdinaryRoutingSupplement(
