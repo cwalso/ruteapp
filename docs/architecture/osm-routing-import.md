@@ -92,7 +92,7 @@ Auditen brukte samme OSM-snapshot, med OSM-tidsstempel `2026-10-07T10:05:10Z`, f
 
 I dette Nerskogen-snapshotet var `secondary` den eneste av de foreslåtte tilleggsklassene som faktisk forekom. Det var nøyaktig 10 slike ways. En separat kontroll av objekttaggene viste at samtlige er segmenter av fylkesvei 6516: Nerskogsveien/Nerskogvegen, Minnillbrua og Grønbrua. Alle er asfalterte, har `maxspeed=60` eller `80`, og ingen hadde `foot=no`, `access=no`, `access=private` eller annen eksplisitt fotgjengerbegrensning.
 
-De 10 `secondary`-wayene samler 44 tidligere separate baseline-komponenter i én større komponent. Det lengste enkeltobjektet i auditen, OSM way `5051607` på Nerskogsveien, er 3,65 km innenfor bbox-en og berører alene 20 baseline-komponenter. Effekten skyldes derfor ikke ti tilfeldige ekstra veier, men at dagens importpolicy utelater selve fylkesvegen som mange av de allerede importerte stiene og sidevegene er koblet til.
+De 10 `secondary`-wayene gjør at 45 tidligere separate baseline-komponenter samles i én større komponent. Det reduserer komponentantallet med 44. Det lengste enkeltobjektet i auditen, OSM way `5051607` på Nerskogsveien, er 3,65 km innenfor bbox-en og berører alene 20 baseline-komponenter. Effekten skyldes derfor ikke ti tilfeldige ekstra veier, men at dagens importpolicy utelater selve fylkesvegen som mange av de allerede importerte stiene og sidevegene er koblet til.
 
 OSMs norske access-defaults angir gangtilgang for `secondary` når ingen mer spesifikk restriksjon overstyrer dette. Den norske highway-veiledningen bruker dessuten `secondary` for sekundære/øvrige fylkesveger med firesifret vegnummer, som Fv. 6516.
 
