@@ -2,9 +2,9 @@
 
 ## Formål og status
 
-Dette dokumentet beskriver en diagnostikkspike for mulige lokale forbindelser mellom geografisk nærliggende deler av samme ordinære routingkomponent. Den generelle spiken oppdager og eksporterer kandidater, men materialiserer dem ikke automatisk som `virtual`-edges.
+Dette dokumentet beskriver en diagnostikkspike for mulige lokale forbindelser mellom geografisk nærliggende deler av samme ordinære routingkomponent. Den generelle spiken oppdager og eksporterer kandidater, men materialiserer dem ikke automatisk som `virtual`-edges. Vanlig ruteberegning og produksjonsbygget er derfor uendret.
 
-Fire manuelt godkjente, preberegnede kandidater ligger i en eksplisitt allowlist og kan materialiseres uten at den kostbare generatoren kjøres i nettleseren. Produksjonsrutingen bruker den godkjente shortcut-grafen som standard; i development kan en toggle brukes til å sammenligne baseline og den godkjente grafen. Dette er fortsatt ikke en generell automatisk shortcut-policy.
+Et separat, kontrollert development-eksperiment kan materialisere fire manuelt godkjente kandidater når brukeren slår på en toggle. Dette er ikke en ny arkitekturbeslutning eller en produksjonsregel. Kandidatene må fortsatt evalueres før terskler, terrengregler eller generell materialisering kan besluttes.
 
 ## To kandidattyper
 
@@ -126,7 +126,7 @@ Et lite manuelt utvalg er vurdert for å teste selve routingmekanismen:
 
 I development mode bygges en ekstra derived graph fra dagens component-gap-graf. `sameComponentShortcutMaterialization.ts` finner kandidatens faktiske punkt på den navngitte ordinary edgen, bruker eksisterende robuste edge-splitting og legger forbindelsen inn begge veier med `edgeType = virtual`. Retning, proporsjonal distanse, proporsjonal cost og ordinary edge-type bevares i de splittede delene. Den cachede ordinary-grafen og dagens derived graph muteres ikke. Shortcutens cost bruker samme `virtualCostMultiplier = 3` som component-gap-forbindelsene.
 
-I development mode kan kontrollen «Bruk godkjente shortcuts i routing» sammenligne baseline med den ekstra grafen. I produksjonsbygget brukes den godkjente shortcut-grafen som standard. Brukte shortcuts inngår dermed automatisk i eksisterende lilla stiplede rutevisualisering, `virtualEdgeCount`, `virtualDistanceMeters`, høydegeometri og gangtidsgrunnlag. De inngår aldri i RuteApps ordinære routable map layer.
+Development-kontrollen «Bruk godkjente shortcuts i routing» er av som standard. Av betyr dagens graf og dagens rutevalg. På velger den ekstra grafen med fire mulige virtual edges. Brukte shortcuts inngår dermed automatisk i eksisterende lilla stiplede rutevisualisering, `virtualEdgeCount`, `virtualDistanceMeters`, høydegeometri og gangtidsgrunnlag. De inngår aldri i RuteApps ordinære routable map layer.
 
 En same-component virtual edge representerer i denne MVP-en en mulig lokal forbindelse mellom to deler av nettet. Den rette linjen uttrykker routingkoblingen og dens omtrentlige direkteavstand, men skal ikke tolkes som at brukeren nødvendigvis må følge nøyaktig denne GPS-traseen. Lokale objekter kan gjøre at praktisk gange avviker noe. Eksperimentet beregner ikke en kurvet omgåelse rundt slike objekter.
 
