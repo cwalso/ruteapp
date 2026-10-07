@@ -121,8 +121,8 @@ describe('approved same-component shortcut development experiment', () => {
   })
 
   it('does not mutate the ordinary or baseline derived graphs', () => {
-    expect(ordinaryGraph.nodes.size).toBe(13_341)
-    expect(ordinaryGraph.edges).toHaveLength(26_806)
+    expect(ordinaryGraph.nodes.size).toBe(dataset.nodes.length)
+    expect(ordinaryGraph.edges).toHaveLength(dataset.edges.length)
     expect(ordinaryGraph.edges.some(({ edgeType }) => edgeType === 'virtual')).toBe(
       false,
     )
