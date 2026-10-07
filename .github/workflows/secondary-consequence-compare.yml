@@ -6,6 +6,7 @@ on:
       - routing/validate-secondary-consequences
     paths:
       - .github/workflows/secondary-consequence-compare.yml
+      - tests/routing/secondaryConsequences.test.ts
 
 permissions:
   contents: read
